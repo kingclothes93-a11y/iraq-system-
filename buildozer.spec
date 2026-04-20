@@ -1,37 +1,23 @@
-name: Build APK
+[app]
+title = KingSystem
+package.name = kingsystem
+package.domain = org.test
 
-on:
-  push:
-    branches:
-      - main
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas
 
-jobs:
-  build:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 60
+version = 0.1
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+requirements = python3,kivy==2.2.0
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.10
+orientation = portrait
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y zip unzip openjdk-17-jdk python3-pip
-          pip install --upgrade pip
-          pip install buildozer cython
+android.api = 33
+android.minapi = 21
+android.ndk = 25b
 
-      - name: Build APK
-        run: |
-          buildozer android debug
+android.archs = arm64-v8a
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
-        with:
-          name: apk
-          path: bin/*.apk
+android.permissions = INTERNET
+
+android.accept_sdk_license = True
