@@ -10,17 +10,18 @@ from kivy.clock import Clock
 class MainApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Dark"
-        self.theme_cls.primary_palette = "Blue"
         
-        # 1. شاشة الصمت (Splash Screen) - تم تحديث الرابط ليكون مباشر
-        splash_url = "https://raw.githubusercontent.com/kingclothes93-a11y/iraq-system-/main/images%20(4).jpeg"
+        # 1. شاشة الصمت (Splash Screen)
+        # تأكد إنك سميت الصورة بـ GitHub (splash.jpg)
+        splash_url = "https://raw.githubusercontent.com/kingclothes93-a11y/iraq-system-/main/splash.jpg"
         self.show_splash(splash_url)
         
         screen = MDScreen()
         layout = BoxLayout(orientation='vertical', spacing=10, padding=20)
         
-        # 2. الواجهة الداخلية (النظر ببرود) - تم تحديث الرابط
-        internal_url = "https://raw.githubusercontent.com/kingclothes93-a11y/iraq-system-/main/images%20(3).jpeg"
+        # 2. الواجهة الداخلية
+        # تأكد إنك سميت الصورة بـ GitHub (main.jpg)
+        internal_url = "https://raw.githubusercontent.com/kingclothes93-a11y/iraq-system-/main/main.jpg"
         img = AsyncImage(
             source=internal_url,
             size_hint=(1, 0.7),
