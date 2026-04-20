@@ -11,16 +11,22 @@ class MainApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Blue"
-        splash_url = "https://raw.githubusercontent.com/kingclothes93-a11y/iraq-system-/main/solo_splash.jpg"
+        
+        # 1. شاشة الصمت (Splash Screen) - تم تحديث الرابط ليكون مباشر
+        splash_url = "https://raw.githubusercontent.com/kingclothes93-a11y/iraq-system-/main/images%20(4).jpeg"
         self.show_splash(splash_url)
+        
         screen = MDScreen()
         layout = BoxLayout(orientation='vertical', spacing=10, padding=20)
-        internal_url = "https://raw.githubusercontent.com/kingclothes93-a11y/iraq-system-/main/solo_internal.jpg"
+        
+        # 2. الواجهة الداخلية (النظر ببرود) - تم تحديث الرابط
+        internal_url = "https://raw.githubusercontent.com/kingclothes93-a11y/iraq-system-/main/images%20(3).jpeg"
         img = AsyncImage(
             source=internal_url,
             size_hint=(1, 0.7),
             allow_stretch=True
         )
+        
         label = MDLabel(
             text="[SYSTEM]: Connection Established.\nWelcome, Shadow Monarch.",
             halign="center",
@@ -28,6 +34,7 @@ class MainApp(MDApp):
             text_color=(0, 0.8, 1, 1),
             font_style="H5"
         )
+        
         layout.add_widget(img)
         layout.add_widget(label)
         screen.add_widget(layout)
