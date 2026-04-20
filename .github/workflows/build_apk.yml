@@ -5,14 +5,13 @@ package.domain = org.test
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
-# المتطلبات الأساسية
+
 requirements = python3,kivy==2.3.0,kivymd==1.2.0,pillow,sh
 
 orientation = portrait
 fullscreen = 0
 android.archs = arm64-v8a
 
-# إعدادات الأندرويد (حل مشكلة الجافا والـ NDK)
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
