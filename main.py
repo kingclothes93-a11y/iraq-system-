@@ -20,13 +20,15 @@ from kivy.graphics import Color, Rectangle, RoundedRectangle
 from kivy.clock import Clock
 from kivy.core.clipboard import Clipboard
 from kivy.core.text import LabelBase
-
-# تسجيل الخط العربي
+# تسجيل الخط العربي - Shadow Monarch System
 try:
-    LabelBase.register(name='Arabic', fn_regular='Cairo-Regular (1).ttf')
+    LabelBase.register(name='Arabic', fn_regular='cairo.ttf')
     ARABIC_FONT = 'Arabic'
 except Exception:
     ARABIC_FONT = 'Roboto'
+
+
+
 
 # ===== الإعدادات =====
 MESSAGES_FILE = "messages.json"
