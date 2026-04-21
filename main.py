@@ -1,80 +1,92 @@
 from kivymd.app import MDApp
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.lang import Builder
-from kivy.core.window import Window
+from kivymd.uix.screen import MDScreen
+from kivymd.uix.screenmanager import MDScreenManager
+from kivymd.uix.label import MDLabel
+from kivymd.uix.button import MDRaisedButton
+from kivy.uix.image import Image
+from kivy.uix.floatlayout import FloatLayout
 
-# This string contains the layout and design of your app
-KV = '''
-ScreenManager:
-    LockScreen:
-    MainScreen:
 
-<LockScreen>:
-    name: 'lock'
-    MDFloatLayout:
-        # Using the lock screen image you uploaded
-        FitImage:
-            source: 'oardefault.jpg'
-        
-        MDLabel:
-            text: "SHADOW MONARCH"
-            halign: "center"
-            pos_hint: {"center_y": .8}
-            theme_text_color: "Custom"
-            text_color: 1, 1, 1, 1
-            font_style: "H4"
-            bold: True
+# ===== Splash Screen =====
+class SplashScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-        MDRaisedButton:
-            text: "UNSEAL SYSTEM"
-            pos_hint: {"center_x": .5, "center_y": .2}
-            size_hint_x: .7
-            on_release: root.manager.current = 'main'
-            md_bg_color: 0.1, 0.1, 0.1, 1
+        layout = FloatLayout()
 
-<MainScreen>:
-    name: 'main'
-    MDFloatLayout:
-        # Using the main screen image you uploaded
-        FitImage:
-            source: 'wp14877560.webp'
-        
-        MDLabel:
-            text: "LEVELING SYSTEM ACTIVE"
-            halign: "center"
-            theme_text_color: "Custom"
-            text_color: 0, 1, 0, 1
-            font_style: "H5"
-            pos_hint: {"center_y": .9}
-            bold: True
+        bg = Image(
+            source="bg_lock.jpg",
+            allow_stretch=True,
+            keep_ratio=False,
+            size_hint=(1, 1)
+        )
 
-        MDIconButton:
-            icon: "shield-check"
-            icon_size: "64sp"
-            pos_hint: {"center_x": .5, "center_y": .5}
-            theme_icon_color: "Custom"
-            icon_color: 0, 0.8, 1, 1
+        title = MDLabel(
+            text="SHADOW MONARCH",
+            halign="center",
+            pos_hint={"center_x": 0.5, "center_y": 0.6},
+            theme_text_color="Custom",
+            text_color=(0, 0.8, 1, 1),
+            font_style="H4"
+        )
 
-        MDLabel:
-            text: "STATUS: SECURE"
-            halign: "center"
-            pos_hint: {"center_y": .4}
-            theme_text_color: "Custom"
-            text_color: 1, 1, 1, 1
-'''
+        btn = MDRaisedButton(
+            text="ENTER",
+            pos_hint={"center_x": 0.5, "center_y": 0.4},
+            on_release=self.go_main
+        )
 
-class LockScreen(Screen):
-    pass
+        layout.add_widget(bg)
+        layout.add_widget(title)
+        layout.add_widget(btn)
 
-class MainScreen(Screen):
-    pass
+        self.add_widget(layout)
 
-class ShadowMonarchApp(MDApp):
+    def go_main(self, *args):
+        self.manager.current = "main"
+
+
+# ===== Main Screen =====
+class MainScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        layout = FloatLayout()
+
+        bg = Image(
+            source="bg_main.jpg",
+            allow_stretch=True,
+            keep_ratio=False,
+            size_hint=(1, 1)
+        )
+
+        text = MDLabel(
+            text="Welcome to Shadow System",
+            halign="center",
+            pos_hint={"center_x": 0.5, "center_y": 0.6},
+            theme_text_color="Custom",
+            text_color=(1, 1, 1, 1),
+            font_style="H5"
+        )
+
+        layout.add_widget(bg)
+        layout.add_widget(text)
+
+        self.add_widget(layout)
+
+
+# ===== App =====
+class MainApp(MDApp):
     def build(self):
-        # Setting a dark theme to match your style
         self.theme_cls.theme_style = "Dark"
-        self.theme_cls.primary_palette = "BlueGray"
-        return Builder.load_string(KV)
 
-if __name__ == '__main__':
-    ShadowMonarchApp().run()
+        sm = MDScreenManager()
+        sm.add_widget(SplashScreen(name="splash"))
+        sm.add_widget(MainScreen(name="main"))
+
+        sm.current = "splash"
+        return sm
+
+
+if __name__ == "__main__":
+    MainApp().run()
