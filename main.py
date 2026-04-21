@@ -1,3 +1,4 @@
+
 import json
 import os
 import random
@@ -28,7 +29,7 @@ FONT_PATH = os.path.join(BASE_DIR, "cairo.ttf")
 if platform == 'android':
     resource_add_path(BASE_DIR)
 
-# ===== تسجيل الخط =====
+# ===== تسجيل الخط العربي =====
 try:
     LabelBase.register(name='Arabic', fn_regular=FONT_PATH)
     ARABIC_FONT = 'Arabic'
@@ -36,7 +37,7 @@ except Exception as e:
     print(f"Font Load Error: {e}")
     ARABIC_FONT = 'Roboto'
 
-# ===== الإعدادات =====
+# ===== الإعدادات وحفظ البيانات =====
 MESSAGES_FILE = os.path.join(BASE_DIR, "messages.json")
 SETTINGS_FILE = os.path.join(BASE_DIR, "settings.json")
 DEFAULT_PASSWORD = "20057"
@@ -70,12 +71,13 @@ def save_json(path, data):
     except:
         pass
 
-# ===== شاشة البداية =====
+# ===== شاشة البداية (Splash) =====
 class SplashScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = FloatLayout()
         layout.add_widget(Image(source=BG_LOCK, allow_stretch=True, keep_ratio=False))
+        
         title = MDLabel(
             text="SHADOW MONARCH",
             halign="center",
@@ -93,7 +95,7 @@ class SplashScreen(MDScreen):
     def go_next(self, dt):
         self.manager.current = "lock"
 
-# ===== شاشة القفل =====
+# ===== شاشة القفل (Lock Screen) =====
 class LockScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -109,14 +111,16 @@ class LockScreen(MDScreen):
             pos_hint={"center_x": 0.5, "center_y": 0.5},
             background_color=(0, 0, 0, 0.7),
             foreground_color=(0, 1, 0, 1),
-            font_name=ARABIC_FONT
+            font_name=ARABIC_FONT,
+            halign="center"
         )
         self.password.bind(on_text_validate=self.check_auth)
 
         btn = MDRaisedButton(
             text="LOGIN",
             pos_hint={"center_x": 0.5, "center_y": 0.4},
-            on_release=self.check_auth
+            on_release=self.check_auth,
+            md_bg_color=(0, 0.5, 1, 1)
         )
 
         layout.add_widget(self.password)
@@ -129,35 +133,41 @@ class LockScreen(MDScreen):
             self.manager.current = "main"
         else:
             MDSnackbar(MDSnackbarText(text="Access Denied")).open()
+            self.password.text = ""
 
-# ===== فقاعة الرسالة =====
+# ===== فقاعة الرسالة (Message Bubble) =====
 class MessageBubble(BoxLayout):
     def __init__(self, text, is_user=True, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
         self.size_hint_y = None
-        self.padding = [10, 5]
+        self.padding = [15, 10]
+        self.spacing = 5
 
-        color = (0, 0.2, 0.4, 0.8) if is_user else (0.1, 0.1, 0.1, 0.8)
+        bubble_color = (0, 0.4, 0.9, 0.8) if is_user else (0.1, 0.1, 0.1, 0.7)
+        halign = "right" if is_user else "left"
+
         lbl = MDLabel(
             text=text,
             theme_text_color="Custom",
             text_color=(1, 1, 1, 1),
             size_hint_y=None,
             font_name=ARABIC_FONT,
-            halign=("right" if is_user else "left")
+            halign=halign
         )
         lbl.bind(texture_size=lambda w, v: setattr(w, 'height', v[1] + 10))
 
         with self.canvas.before:
-            Color(*color)
-            self.bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[10])
+            Color(*bubble_color)
+            self.bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[15, 15, (0 if is_user else 15), (15 if is_user else 0)])
+        
         self.bind(pos=lambda w, v: setattr(self.bg, 'pos', v),
                   size=lambda w, v: setattr(self.bg, 'size', v))
         self.bind(minimum_height=self.setter('height'))
+        
         self.add_widget(lbl)
 
-# ===== الشاشة الرئيسية =====
+# ===== الشاشة الرئيسية (Chat Screen) =====
 class MainScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -168,48 +178,58 @@ class MainScreen(MDScreen):
         layout = FloatLayout()
         layout.add_widget(Image(source=BG_MAIN, allow_stretch=True, keep_ratio=False))
 
-        self.scroll = ScrollView(size_hint=(1, 0.85), pos_hint={"top": 1})
+        self.scroll = ScrollView(size_hint=(1, 0.88), pos_hint={"top": 1})
         self.chat_list = BoxLayout(
             orientation='vertical',
             size_hint_y=None,
-            spacing=10,
-            padding=10
+            spacing=15,
+            padding=15
         )
         self.chat_list.bind(minimum_height=self.chat_list.setter('height'))
         self.scroll.add_widget(self.chat_list)
 
-        input_box = BoxLayout(
+        input_container = BoxLayout(
             size_hint=(1, 0.08),
             pos_hint={"y": 0},
-            padding=5,
-            spacing=5
+            padding=10,
+            spacing=10
         )
+        with input_container.canvas.before:
+            Color(0, 0, 0, 0.9)
+            RoundedRectangle(pos=input_container.pos, size=input_container.size)
+
         self.ti = TextInput(
             hint_text="Enter Command...",
             multiline=False,
-            font_name=ARABIC_FONT
+            font_name=ARABIC_FONT,
+            background_color=(0.1, 0.1, 0.1, 1),
+            foreground_color=(1, 1, 1, 1),
+            cursor_color=(0, 0.5, 1, 1)
         )
         self.ti.bind(on_text_validate=self.send)
-        btn = MDIconButton(icon="send", on_release=self.send)
+        
+        btn = MDIconButton(
+            icon="send",
+            theme_text_color="Custom",
+            text_color=(0, 0.5, 1, 1),
+            on_release=self.send
+        )
 
-        input_box.add_widget(self.ti)
-        input_box.add_widget(btn)
+        input_container.add_widget(self.ti)
+        input_container.add_widget(btn)
 
         layout.add_widget(self.scroll)
-        layout.add_widget(input_box)
+        layout.add_widget(input_container)
         self.add_widget(layout)
-        Clock.schedule_once(self.load_old, 0.2)
+        Clock.schedule_once(self.load_old, 0.5)
 
     def load_old(self, dt):
         for m in self.history:
-            self.chat_list.add_widget(
-                MessageBubble(text=m["text"], is_user=m["is_user"])
-            )
+            self.chat_list.add_widget(MessageBubble(text=m["text"], is_user=m["is_user"]))
 
     def send(self, *args):
         val = self.ti.text.strip()
-        if not val:
-            return
+        if not val: return
         self.chat_list.add_widget(MessageBubble(text=val, is_user=True))
         self.history.append({"text": val, "is_user": True})
         save_json(MESSAGES_FILE, self.history)
@@ -223,7 +243,7 @@ class MainScreen(MDScreen):
         save_json(MESSAGES_FILE, self.history)
         self.scroll.scroll_y = 0
 
-# ===== تشغيل التطبيق =====
+# ===== تشغيل التطبيق (MDApp) =====
 class ShadowApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Dark"
