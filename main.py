@@ -1,84 +1,80 @@
-import os
 from kivymd.app import MDApp
-from kivymd.uix.screen import MDScreen
-from kivymd.uix.screenmanager import MDScreenManager, FadeTransition
-from kivymd.uix.button import MDRaisedButton
-from kivymd.uix.label import MDLabel
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.image import Image
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.lang import Builder
+from kivy.core.window import Window
 
-class LockScreen(MDScreen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        layout = FloatLayout()
-        
-        # Load lock screen background (oardefault.jpg)
-        try:
-            if os.path.exists("oardefault.jpg"):
-                layout.add_widget(Image(
-                    source="oardefault.jpg", 
-                    allow_stretch=True, 
-                    keep_ratio=False
-                ))
-        except:
-            pass
-        
-        self.add_widget(layout)
-        
-        # Status Text
-        self.add_widget(MDLabel(
-            text="SYSTEM LOCKED", 
-            halign="center", 
-            pos_hint={"center_y": 0.6}, 
-            theme_text_color="Custom", 
-            text_color=(0, 0.7, 1, 1),
-            font_style="H4"
-        ))
-        
-        # Access Button
-        self.add_widget(MDRaisedButton(
-            text="ENTER ACCESS CODE", 
-            pos_hint={"center_x": 0.5, "center_y": 0.4}, 
-            on_release=lambda x: self.open_system()
-        ))
+# This string contains the layout and design of your app
+KV = '''
+ScreenManager:
+    LockScreen:
+    MainScreen:
 
-    def open_system(self):
-        self.manager.current = "main"
-
-class MainScreen(MDScreen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        layout = FloatLayout()
+<LockScreen>:
+    name: 'lock'
+    MDFloatLayout:
+        # Using the lock screen image you uploaded
+        FitImage:
+            source: 'oardefault.jpg'
         
-        # Load main background (wp14877560.webp)
-        try:
-            if os.path.exists("wp14877560.webp"):
-                layout.add_widget(Image(
-                    source="wp14877560.webp", 
-                    allow_stretch=True, 
-                    keep_ratio=False
-                ))
-        except:
-            pass
-            
-        layout.add_widget(MDLabel(
-            text="SHADOW MONARCH ACTIVE", 
-            halign="center", 
-            theme_text_color="Custom", 
-            text_color=(0, 1, 0, 1),
-            font_style="H5"
-        ))
-        self.add_widget(layout)
+        MDLabel:
+            text: "SHADOW MONARCH"
+            halign: "center"
+            pos_hint: {"center_y": .8}
+            theme_text_color: "Custom"
+            text_color: 1, 1, 1, 1
+            font_style: "H4"
+            bold: True
 
-class ShadowApp(MDApp):
+        MDRaisedButton:
+            text: "UNSEAL SYSTEM"
+            pos_hint: {"center_x": .5, "center_y": .2}
+            size_hint_x: .7
+            on_release: root.manager.current = 'main'
+            md_bg_color: 0.1, 0.1, 0.1, 1
+
+<MainScreen>:
+    name: 'main'
+    MDFloatLayout:
+        # Using the main screen image you uploaded
+        FitImage:
+            source: 'wp14877560.webp'
+        
+        MDLabel:
+            text: "LEVELING SYSTEM ACTIVE"
+            halign: "center"
+            theme_text_color: "Custom"
+            text_color: 0, 1, 0, 1
+            font_style: "H5"
+            pos_hint: {"center_y": .9}
+            bold: True
+
+        MDIconButton:
+            icon: "shield-check"
+            icon_size: "64sp"
+            pos_hint: {"center_x": .5, "center_y": .5}
+            theme_icon_color: "Custom"
+            icon_color: 0, 0.8, 1, 1
+
+        MDLabel:
+            text: "STATUS: SECURE"
+            halign: "center"
+            pos_hint: {"center_y": .4}
+            theme_text_color: "Custom"
+            text_color: 1, 1, 1, 1
+'''
+
+class LockScreen(Screen):
+    pass
+
+class MainScreen(Screen):
+    pass
+
+class ShadowMonarchApp(MDApp):
     def build(self):
+        # Setting a dark theme to match your style
         self.theme_cls.theme_style = "Dark"
-        self.theme_cls.primary_palette = "Blue"
-        
-        sm = MDScreenManager(transition=FadeTransition())
-        sm.add_widget(LockScreen(name="lock"))
-        sm.add_widget(MainScreen(name="main"))
-        return sm
+        self.theme_cls.primary_palette = "BlueGray"
+        return Builder.load_string(KV)
 
-if __name__ == "__main__":
-    ShadowApp().run()
+if __name__ == '__main__':
+    ShadowMonarchApp().run()
