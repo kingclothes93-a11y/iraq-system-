@@ -1,55 +1,55 @@
 [app]
 
-# (str) Title of your application
+# (str) اسم التطبيق الذي سيظهر على الهاتف
 title = Shadow Monarch
 
-# (str) Package name
+# (str) اسم الحزمة (يفضل أن يكون فريداً وبدون مسافات)
 package.name = shadowmonarch
 
-# (str) Package domain (needed for android packaging)
+# (str) النطاق (Domain) الخاص بالحزمة
 package.domain = org.king
 
-# (str) Source code where the main.py live
+# (str) المجلد الذي يحتوي على main.py
 source.dir = .
 
-# (list) Source files to include
-# ملاحظة: تأكد من تسمية ملف الخط cairo.ttf في المجلد وفي الكود
+# (list) الامتدادات التي سيتم تضمينها داخل التطبيق
+# تأكد من وجود ttf لكي يقرأ ملف الخط cairo.ttf
 source.include_exts = py,png,jpg,jpeg,ttf,json
 
-# (list) Application requirements
+# (list) المكتبات المطلوبة للتشغيل (مهمة جداً لعدم الانهيار)
 requirements = python3, kivy==2.3.0, kivymd, pillow, requests, urllib3, charset-normalizer, idna, openssl
 
-# (str) Application version
+# (str) إصدار التطبيق
 version = 1.0
 
-# (str) Supported orientations
+# (str) وضع الشاشة (طولي)
 orientation = portrait
 
-# (list) Permissions
+# (list) الصلاحيات المطلوبة (تم إضافة الكاميرا والملفات كما في الكود)
 android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, CAMERA
 
-# (int) Target Android API
+# (int) استهداف أحدث إصدار أندرويد مستقر
 android.api = 33
 
-# (int) Minimum API
+# (int) أقل إصدار أندرويد يعمل عليه التطبيق
 android.minapi = 21
 
-# (bool) Fullscreen
+# (bool) شاشة كاملة
 fullscreen = 1
 
-# (str) Android NDK version
+# (str) إصدار الـ NDK المتوافق
 android.ndk = 25b
 
-# (bool) Accept SDK license
+# (bool) قبول رخص الـ SDK تلقائياً
 android.accept_sdk_license = True
 
-# (list) Android architectures
+# (list) المعماريات المدعومة للهواتف الحديثة والقديمة
 android.archs = arm64-v8a, armeabi-v7a
 
 [buildozer]
 
-# (int) Log level (2 = error/info)
+# (int) مستوى السجل (2 لإظهار الأخطاء والمعلومات المهمة)
 log_level = 2
 
-# (int) Display warning if buildozer is run as root
+# (int) عرض تحذير إذا تم التشغيل كجذر
 warn_on_root = 1
