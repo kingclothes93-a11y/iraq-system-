@@ -1,4 +1,3 @@
-import time
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
@@ -7,11 +6,10 @@ from kivymd.uix.button import MDIconButton, MDRaisedButton
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.modalview import ModalView
 from kivy.uix.textinput import TextInput
 from kivy.uix.image import AsyncImage
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, Rectangle, Ellipse
+from kivy.graphics import Color, Rectangle
 from kivy.clock import Clock
 
 # ===== شاشة كلمة السر =====
@@ -19,123 +17,59 @@ class LockScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = FloatLayout()
-
-        # صورة الخلفية (جين وو الغامض) - رابط مباشر
         bg = AsyncImage(
             source="https://w0.peakpx.com/wallpaper/404/695/HD-wallpaper-sung-jin-woo-eye-glowing-blue-anime-solo-leveling.jpg",
-            allow_stretch=True,
-            keep_ratio=False,
-            size_hint=(1, 1),
-            pos_hint={"x": 0, "y": 0}
+            allow_stretch=True, keep_ratio=False, size_hint=(1, 1)
         )
-
-        overlay = Widget(size_hint=(1, 1), pos_hint={"x": 0, "y": 0})
+        overlay = Widget()
         with overlay.canvas:
             Color(0, 0, 0, 0.5)
-            self.overlay_rect = Rectangle(pos=overlay.pos, size=overlay.size)
-        overlay.bind(size=lambda w, v: setattr(self.overlay_rect, 'size', v),
-                     pos=lambda w, v: setattr(self.overlay_rect, 'pos', v))
-
+            self.rect = Rectangle(size=(2000, 4000))
+        
         title = MDLabel(
-            text="SHADOW MONARCH",
-            halign="center",
-            theme_text_color="Custom",
-            text_color=(0, 0.8, 1, 1),
-            font_style="H5",
-            bold=True,
-            pos_hint={"center_x": 0.5, "center_y": 0.82}
+            text="SHADOW MONARCH", halign="center", theme_text_color="Custom",
+            text_color=(0, 0.8, 1, 1), font_style="H5", bold=True, pos_hint={"center_y": 0.8}
         )
-
-        self.password_input = TextInput(
-            hint_text="● ● ● ● ●",
-            password=True,
-            multiline=False,
-            size_hint=(0.7, None),
-            height=50,
-            pos_hint={"center_x": 0.5, "center_y": 0.55},
-            background_color=(0.05, 0.05, 0.1, 0.9),
-            foreground_color=(0, 0.8, 1, 1),
-            cursor_color=(0, 0.8, 1, 1)
+        self.password = TextInput(
+            password=True, size_hint=(0.7, 0.06), pos_hint={"center_x": 0.5, "center_y": 0.5},
+            background_color=(0, 0, 0, 0.8), foreground_color=(0, 0.8, 1, 1)
         )
-
-        btn_enter = MDRaisedButton(
-            text="[ ARISES ]",
-            size_hint=(0.5, None),
-            height=50,
-            pos_hint={"center_x": 0.5, "center_y": 0.4},
-            md_bg_color=(0, 0.5, 0.8, 1),
-            on_release=self.check_password
+        btn = MDRaisedButton(
+            text="ARISES", pos_hint={"center_x": 0.5, "center_y": 0.35},
+            on_release=self.check
         )
-
-        layout.add_widget(bg)
-        layout.add_widget(overlay)
-        layout.add_widget(title)
-        layout.add_widget(self.password_input)
-        layout.add_widget(btn_enter)
+        layout.add_widget(bg); layout.add_widget(overlay); layout.add_widget(title)
+        layout.add_widget(self.password); layout.add_widget(btn)
         self.add_widget(layout)
 
-    def check_password(self, *args):
-        if self.password_input.text == "20057":
-            self.manager.current = "main"
-        else:
-            self.password_input.text = ""
+    def check(self, *args):
+        if self.password.text == "20057": self.manager.current = "main"
 
 # ===== الشاشة الرئيسية =====
 class MainScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        main_layout = BoxLayout(orientation='vertical')
-
-        # الأعلى مع صورة جين وو والظلال
-        top = FloatLayout(size_hint=(1, 0.4))
-        bg_main = AsyncImage(
-            source="https://w0.peakpx.com/wallpaper/326/289/HD-wallpaper-sung-jin-woo-solo-leveling-anime-aesthetic-shadows.jpg",
-            allow_stretch=True,
-            keep_ratio=False
-        )
-
-        title_label = MDLabel(
-            text="[SYSTEM]: Welcome, King Mustafa",
-            halign="center",
-            theme_text_color="Custom",
-            text_color=(0, 0.8, 1, 1),
-            font_style="H6",
-            bold=True,
-            pos_hint={"center_x": 0.5, "center_y": 0.2}
-        )
-
-        top.add_widget(bg_main)
-        top.add_widget(title_label)
-
-        # منطقة الرسائل
-        self.scroll = ScrollView(size_hint=(1, 0.45))
-        self.messages_layout = BoxLayout(orientation='vertical', size_hint_y=None, spacing=5, padding=10)
-        self.messages_layout.bind(minimum_height=self.messages_layout.setter('height'))
-        self.scroll.add_widget(self.messages_layout)
-
-        # شريط الإدخال
-        input_bar = BoxLayout(size_hint=(1, 0.15), padding=5, spacing=5)
-        self.text_input = TextInput(
-            hint_text="Enter System Command...",
-            background_color=(0.1, 0.1, 0.1, 1),
-            foreground_color=(0, 0.8, 1, 1)
-        )
-        btn_send = MDIconButton(icon="send", icon_color=(0, 0.8, 1, 1), on_release=self.send_message)
+        layout = BoxLayout(orientation='vertical')
+        top = FloatLayout(size_hint_y=0.4)
+        img = AsyncImage(source="https://w0.peakpx.com/wallpaper/326/289/HD-wallpaper-sung-jin-woo-solo-leveling-anime-aesthetic-shadows.jpg", allow_stretch=True, keep_ratio=False)
+        lbl = MDLabel(text="[SYSTEM]: Welcome King Mustafa", halign="center", theme_text_color="Custom", text_color=(0, 0.8, 1, 1), pos_hint={"center_y": 0.2})
+        top.add_widget(img); top.add_widget(lbl)
         
-        input_bar.add_widget(self.text_input)
-        input_bar.add_widget(btn_send)
+        self.scroll = ScrollView(); self.msgs = BoxLayout(orientation='vertical', size_hint_y=None); self.msgs.bind(minimum_height=self.msgs.setter('height'))
+        self.scroll.add_widget(self.msgs)
+        
+        in_bar = BoxLayout(size_hint_y=0.1, padding=5)
+        self.ti = TextInput(hint_text="Command...", background_color=(0.1, 0.1, 0.1, 1), foreground_color=(0, 0.8, 1, 1))
+        btn_s = MDIconButton(icon="send", on_release=self.send)
+        in_bar.add_widget(self.ti); in_bar.add_widget(btn_s)
+        
+        layout.add_widget(top); layout.add_widget(self.scroll); layout.add_widget(in_bar)
+        self.add_widget(layout)
 
-        main_layout.add_widget(top)
-        main_layout.add_widget(self.scroll)
-        main_layout.add_widget(input_bar)
-        self.add_widget(main_layout)
-
-    def send_message(self, *args):
-        text = self.text_input.text.strip()
-        if text:
-            lbl = MDLabel(text=f"👤 {text}", theme_text_color="Custom", text_color=(0, 0.8, 1, 1), size_hint_y=None, height=40)
-            self.messages_layout.add_widget(lbl)
-            self.text_input.text = ""
+    def send(self, *args):
+        if self.ti.text:
+            self.msgs.add_widget(MDLabel(text=f"👤 {self.ti.text}", theme_text_color="Custom", text_color=(0, 0.8, 1, 1), size_hint_y=None, height=40))
+            self.ti.text = ""
 
 # ===== التطبيق الرئيسي =====
 class MainApp(MDApp):
@@ -143,4 +77,8 @@ class MainApp(MDApp):
         self.theme_cls.theme_style = "Dark"
         sm = MDScreenManager()
         sm.add_widget(LockScreen(name="lock"))
-        sm.add_widget(MainScreen
+        sm.add_widget(MainScreen(name="main"))
+        return sm
+
+if __name__ == "__main__":
+    MainApp().run()
