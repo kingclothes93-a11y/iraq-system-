@@ -1,4 +1,3 @@
-
 [app]
 
 # (str) Title of your application
@@ -14,20 +13,21 @@ package.domain = org.shadow.system
 source.dir = .
 
 # (list) Source files to include
-source.include_exts = py,png,jpg,kv,atlas,ttf
+# تم التأكد من تضمين ttf و json لضمان عمل الخط وحفظ الرسائل
+source.include_exts = py,png,jpg,kv,atlas,ttf,json
 
 # (str) Application versioning
 version = 1.0.0
 
 # (list) Application requirements
-# هذه المكتبات هي الأهم لدعم اللغة العربية والصور
-requirements = python3,kivy==2.2.1,kivymd==1.1.1,arabic-reshaper,python-bidi,pillow
+# تم تحديث الإصدارات لضمان التوافق مع أندرويد 33 ومنع الانهيار
+requirements = python3, kivy==2.3.0, kivymd==1.2.0, pillow, arabic-reshaper, python-bidi, requests, urllib3
 
 # (str) Supported orientations
 orientation = portrait
 
 # (list) Permissions
-android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, CAMERA
 
 # (int) Target Android API
 android.api = 33
@@ -40,6 +40,9 @@ android.ndk = 25b
 
 # (bool) Use --private data storage
 android.private_storage = True
+
+# (bool) Accept SDK license (مهمة جداً لتجاوز خطأ الـ SDK السابق)
+android.accept_sdk_license = True
 
 # (str) Android entry point
 android.entrypoint = main.py
