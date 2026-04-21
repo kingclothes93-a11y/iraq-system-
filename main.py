@@ -1,6 +1,8 @@
 import json
 import os
 import random
+from kivy.resources import resource_add_path
+from kivy.utils import platform
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
@@ -17,17 +19,26 @@ from kivy.graphics import Color, RoundedRectangle
 from kivy.clock import Clock
 from kivy.core.text import LabelBase
 
-# ===== تسجيل الخط العربي =====
+# ===== مسارات الملفات =====
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BG_LOCK  = os.path.join(BASE_DIR, "bg_lock.jpg")
+BG_MAIN  = os.path.join(BASE_DIR, "bg_main.jpg")
+FONT_PATH = os.path.join(BASE_DIR, "cairo.ttf")
+
+if platform == 'android':
+    resource_add_path(BASE_DIR)
+
+# ===== تسجيل الخط =====
 try:
-    LabelBase.register(name='Arabic', fn_regular='cairo.ttf')
+    LabelBase.register(name='Arabic', fn_regular=FONT_PATH)
     ARABIC_FONT = 'Arabic'
 except Exception as e:
     print(f"Font Load Error: {e}")
     ARABIC_FONT = 'Roboto'
 
 # ===== الإعدادات =====
-MESSAGES_FILE = "messages.json"
-SETTINGS_FILE = "settings.json"
+MESSAGES_FILE = os.path.join(BASE_DIR, "messages.json")
+SETTINGS_FILE = os.path.join(BASE_DIR, "settings.json")
 DEFAULT_PASSWORD = "20057"
 
 SYSTEM_RESPONSES = [
@@ -64,7 +75,7 @@ class SplashScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = FloatLayout()
-        layout.add_widget(Image(source="bg_lock.jpg", allow_stretch=True, keep_ratio=False))
+        layout.add_widget(Image(source=BG_LOCK, allow_stretch=True, keep_ratio=False))
         title = MDLabel(
             text="SHADOW MONARCH",
             halign="center",
@@ -87,11 +98,14 @@ class LockScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = FloatLayout()
-        layout.add_widget(Image(source="bg_lock.jpg", allow_stretch=True, keep_ratio=False))
+        layout.add_widget(Image(source=BG_LOCK, allow_stretch=True, keep_ratio=False))
 
         self.password = TextInput(
-            password=True, hint_text="Access Code", multiline=False,
-            size_hint=(0.7, None), height=50,
+            password=True,
+            hint_text="Access Code",
+            multiline=False,
+            size_hint=(0.7, None),
+            height=50,
             pos_hint={"center_x": 0.5, "center_y": 0.5},
             background_color=(0, 0, 0, 0.7),
             foreground_color=(0, 1, 0, 1),
@@ -152,15 +166,29 @@ class MainScreen(MDScreen):
 
     def _ui(self):
         layout = FloatLayout()
-        layout.add_widget(Image(source="bg_main.jpg", allow_stretch=True, keep_ratio=False))
+        layout.add_widget(Image(source=BG_MAIN, allow_stretch=True, keep_ratio=False))
 
         self.scroll = ScrollView(size_hint=(1, 0.85), pos_hint={"top": 1})
-        self.chat_list = BoxLayout(orientation='vertical', size_hint_y=None, spacing=10, padding=10)
+        self.chat_list = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=10,
+            padding=10
+        )
         self.chat_list.bind(minimum_height=self.chat_list.setter('height'))
         self.scroll.add_widget(self.chat_list)
 
-        input_box = BoxLayout(size_hint=(1, 0.08), pos_hint={"y": 0}, padding=5, spacing=5)
-        self.ti = TextInput(hint_text="Enter Command...", multiline=False, font_name=ARABIC_FONT)
+        input_box = BoxLayout(
+            size_hint=(1, 0.08),
+            pos_hint={"y": 0},
+            padding=5,
+            spacing=5
+        )
+        self.ti = TextInput(
+            hint_text="Enter Command...",
+            multiline=False,
+            font_name=ARABIC_FONT
+        )
         self.ti.bind(on_text_validate=self.send)
         btn = MDIconButton(icon="send", on_release=self.send)
 
@@ -174,7 +202,9 @@ class MainScreen(MDScreen):
 
     def load_old(self, dt):
         for m in self.history:
-            self.chat_list.add_widget(MessageBubble(text=m["text"], is_user=m["is_user"]))
+            self.chat_list.add_widget(
+                MessageBubble(text=m["text"], is_user=m["is_user"])
+            )
 
     def send(self, *args):
         val = self.ti.text.strip()
