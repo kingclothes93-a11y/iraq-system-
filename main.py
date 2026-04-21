@@ -1,39 +1,33 @@
 import json
 import os
 import random
-from datetime import datetime
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
-from kivymd.uix.screenmanager import MDScreenManager, SlideTransition
-from kivymd.uix.button import MDIconButton, MDRaisedButton, MDFlatButton
+from kivymd.uix.screenmanager import MDScreenManager
+from kivy.uix.screenmanager import SlideTransition
+from kivymd.uix.button import MDIconButton, MDRaisedButton
 from kivymd.uix.label import MDLabel
-from kivymd.uix.bottomsheet import MDListBottomSheet
-from kivymd.uix.dialog import MDDialog
-from kivymd.uix.snackbar import Snackbar
+from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
-from kivy.uix.widget import Widget
-from kivy.graphics import Color, Rectangle, RoundedRectangle
+from kivy.graphics import Color, RoundedRectangle
 from kivy.clock import Clock
-from kivy.core.clipboard import Clipboard
 from kivy.core.text import LabelBase
 
-# ===== نظام تسجيل الخط (تم التعديل لضمان الأمان) =====
+# ===== تسجيل الخط العربي =====
 try:
-    # نتأكد من أن ملف الخط اسمه cairo.ttf في المجلد الرئيسي
     LabelBase.register(name='Arabic', fn_regular='cairo.ttf')
     ARABIC_FONT = 'Arabic'
 except Exception as e:
     print(f"Font Load Error: {e}")
-    ARABIC_FONT = 'Roboto' # خط احتياطي في حال عدم وجود الملف لمنع الانهيار
+    ARABIC_FONT = 'Roboto'
 
-# ===== الإعدادات الثابتة =====
+# ===== الإعدادات =====
 MESSAGES_FILE = "messages.json"
 SETTINGS_FILE = "settings.json"
-USER_NAME = "Shadow Monarch"
 DEFAULT_PASSWORD = "20057"
 
 SYSTEM_RESPONSES = [
@@ -54,24 +48,23 @@ def load_json(path, default):
         try:
             with open(path, "r", encoding='utf-8') as f:
                 return json.load(f)
-        except: pass
+        except:
+            pass
     return default
 
 def save_json(path, data):
     try:
         with open(path, "w", encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False)
-    except: pass
+    except:
+        pass
 
-# ===== شاشة البداية (Splash) =====
+# ===== شاشة البداية =====
 class SplashScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = FloatLayout()
-        
-        # الخلفية
         layout.add_widget(Image(source="bg_lock.jpg", allow_stretch=True, keep_ratio=False))
-        
         title = MDLabel(
             text="SHADOW MONARCH",
             halign="center",
@@ -89,25 +82,29 @@ class SplashScreen(MDScreen):
     def go_next(self, dt):
         self.manager.current = "lock"
 
-# ===== شاشة القفل (Lock) =====
+# ===== شاشة القفل =====
 class LockScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = FloatLayout()
         layout.add_widget(Image(source="bg_lock.jpg", allow_stretch=True, keep_ratio=False))
-        
+
         self.password = TextInput(
             password=True, hint_text="Access Code", multiline=False,
-            size_hint=(0.7, None), height=50, pos_hint={"center_x": 0.5, "center_y": 0.5},
-            background_color=(0,0,0,0.7), foreground_color=(0,1,0,1), font_name=ARABIC_FONT
+            size_hint=(0.7, None), height=50,
+            pos_hint={"center_x": 0.5, "center_y": 0.5},
+            background_color=(0, 0, 0, 0.7),
+            foreground_color=(0, 1, 0, 1),
+            font_name=ARABIC_FONT
         )
         self.password.bind(on_text_validate=self.check_auth)
-        
+
         btn = MDRaisedButton(
-            text="LOGIN", pos_hint={"center_x": 0.5, "center_y": 0.4},
+            text="LOGIN",
+            pos_hint={"center_x": 0.5, "center_y": 0.4},
             on_release=self.check_auth
         )
-        
+
         layout.add_widget(self.password)
         layout.add_widget(btn)
         self.add_widget(layout)
@@ -117,31 +114,36 @@ class LockScreen(MDScreen):
         if self.password.text == settings["password"]:
             self.manager.current = "main"
         else:
-            Snackbar(text="Access Denied").open()
+            MDSnackbar(MDSnackbarText(text="Access Denied")).open()
 
 # ===== فقاعة الرسالة =====
 class MessageBubble(BoxLayout):
-    def __init__(self, text, is_user=True, timestamp="", **kwargs):
+    def __init__(self, text, is_user=True, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
         self.size_hint_y = None
         self.padding = [10, 5]
-        
+
         color = (0, 0.2, 0.4, 0.8) if is_user else (0.1, 0.1, 0.1, 0.8)
         lbl = MDLabel(
-            text=text, theme_text_color="Custom", text_color=(1,1,1,1),
-            size_hint_y=None, font_name=ARABIC_FONT, halign=("right" if is_user else "left")
+            text=text,
+            theme_text_color="Custom",
+            text_color=(1, 1, 1, 1),
+            size_hint_y=None,
+            font_name=ARABIC_FONT,
+            halign=("right" if is_user else "left")
         )
         lbl.bind(texture_size=lambda w, v: setattr(w, 'height', v[1] + 10))
-        
+
         with self.canvas.before:
             Color(*color)
             self.bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[10])
-        self.bind(pos=lambda w,v: setattr(self.bg, 'pos', v), size=lambda w,v: setattr(self.bg, 'size', v))
+        self.bind(pos=lambda w, v: setattr(self.bg, 'pos', v),
+                  size=lambda w, v: setattr(self.bg, 'size', v))
         self.bind(minimum_height=self.setter('height'))
         self.add_widget(lbl)
 
-# ===== الشاشة الرئيسية (Main Chat) =====
+# ===== الشاشة الرئيسية =====
 class MainScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -151,22 +153,20 @@ class MainScreen(MDScreen):
     def _ui(self):
         layout = FloatLayout()
         layout.add_widget(Image(source="bg_main.jpg", allow_stretch=True, keep_ratio=False))
-        
-        # منطقة الرسائل
+
         self.scroll = ScrollView(size_hint=(1, 0.85), pos_hint={"top": 1})
         self.chat_list = BoxLayout(orientation='vertical', size_hint_y=None, spacing=10, padding=10)
         self.chat_list.bind(minimum_height=self.chat_list.setter('height'))
         self.scroll.add_widget(self.chat_list)
-        
-        # شريط الإدخال
+
         input_box = BoxLayout(size_hint=(1, 0.08), pos_hint={"y": 0}, padding=5, spacing=5)
         self.ti = TextInput(hint_text="Enter Command...", multiline=False, font_name=ARABIC_FONT)
         self.ti.bind(on_text_validate=self.send)
         btn = MDIconButton(icon="send", on_release=self.send)
-        
+
         input_box.add_widget(self.ti)
         input_box.add_widget(btn)
-        
+
         layout.add_widget(self.scroll)
         layout.add_widget(input_box)
         self.add_widget(layout)
@@ -178,7 +178,8 @@ class MainScreen(MDScreen):
 
     def send(self, *args):
         val = self.ti.text.strip()
-        if not val: return
+        if not val:
+            return
         self.chat_list.add_widget(MessageBubble(text=val, is_user=True))
         self.history.append({"text": val, "is_user": True})
         save_json(MESSAGES_FILE, self.history)
