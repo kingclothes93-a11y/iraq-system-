@@ -12,12 +12,12 @@ package.domain = org.king
 # (str) Source code where the main.py live
 source.dir = .
 
-# (list) Source files to include (أضفنا json و ttf هنا)
+# (list) Source files to include
+# ملاحظة: تأكد من تسمية ملف الخط cairo.ttf في المجلد وفي الكود
 source.include_exts = py,png,jpg,jpeg,ttf,json
 
-# (list) Application requirements 
-# أضفنا الصلاحيات والمكتبات المطلوبة لعمل القوائم والإنترنت والصور
-requirements = python3, kivy, kivymd, pillow, requests, urllib3, charset-normalizer, idna, openssl
+# (list) Application requirements
+requirements = python3, kivy==2.3.0, kivymd, pillow, requests, urllib3, charset-normalizer, idna, openssl
 
 # (str) Application version
 version = 1.0
@@ -25,8 +25,7 @@ version = 1.0
 # (str) Supported orientations
 orientation = portrait
 
-# (list) Permissions 
-# أضفنا الكاميرا وقراءة الملفات والإنترنت
+# (list) Permissions
 android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, CAMERA
 
 # (int) Target Android API
