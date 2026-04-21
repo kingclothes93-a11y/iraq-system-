@@ -25,12 +25,27 @@ jobs:
           pip install --upgrade pip
           pip install Cython==0.29.33 buildozer
 
-      - name: Build with Buildozer
-        run: buildozer android debug
+      - name: Build with Buildozer (Debug Mode for Verbose Logging)
+        run: |
+          buildozer android debug
+        env:
+          # Enable verbose output
+          BUILDOZER_VERBOSE: 1
+          # Log level for buildozer
+          BUILDOZER_LOG_LEVEL: 2
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: King-System-App
           path: bin/*.apk
-          
+
+      - name: Upload Build Logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Build-Logs
+          path: |
+            .buildozer/android/debug/build-*.txt
+            .buildozer/android/debug/log*.txt
