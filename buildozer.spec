@@ -6,51 +6,51 @@ title = Shadow Monarch
 # (str) Package name
 package.name = shadowmonarch
 
-# (str) Package domain (needed for android packaging)
+# (str) Package domain
 package.domain = org.shadow.system
 
-# (str) Source code where the main.py live
+# (str) Source code directory
 source.dir = .
 
 # (list) Source files to include
-# تم التأكد من تضمين ttf و json لضمان عمل الخط وحفظ الرسائل
-source.include_exts = py,png,jpg,kv,atlas,ttf,json
+# Removed ttf to avoid any font issues
+source.include_exts = py,png,jpg,jpeg,json
 
-# (str) Application versioning
+# (str) Application version
 version = 1.0.0
 
 # (list) Application requirements
-# تم تحديث الإصدارات لضمان التوافق مع أندرويد 33 ومنع الانهيار
-requirements = python3, kivy==2.3.0, kivymd==1.2.0, pillow, arabic-reshaper, python-bidi, requests, urllib3
+# Minimal and stable requirements for English UI
+requirements = python3, kivy==2.3.0, kivymd==1.2.0, pillow, requests
 
 # (str) Supported orientations
 orientation = portrait
 
 # (list) Permissions
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, CAMERA
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
 # (int) Target Android API
 android.api = 33
 
-# (int) Minimum API your APK will support
+# (int) Minimum API
 android.minapi = 21
 
-# (str) Android NDK version to use
+# (str) Android NDK version
 android.ndk = 25b
 
-# (bool) Use --private data storage
+# (bool) Use private data storage
 android.private_storage = True
 
-# (bool) Accept SDK license (مهمة جداً لتجاوز خطأ الـ SDK السابق)
+# (bool) Accept SDK license (Crucial for GitHub Actions)
 android.accept_sdk_license = True
 
 # (str) Android entry point
 android.entrypoint = main.py
 
-# (list) The Android archs to build for
+# (list) The Android architectures
 android.archs = arm64-v8a, armeabi-v7a
 
-# (bool) enables Android auto backup feature
+# (bool) Auto backup feature
 android.autobackup = False
 
 [buildozer]
@@ -58,5 +58,5 @@ android.autobackup = False
 # (int) Log level (2 = debug)
 log_level = 2
 
-# (int) Display warning if buildozer is run as root
+# (int) Display warning if run as root
 warn_on_root = 1
