@@ -1,32 +1,14 @@
-# Android Build Configuration for Iraq System
-
-# Build options
-requirecython = True
-
-# Proper Gradle setup
-# Include necessary Gradle dependencies
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion 30
-    defaultConfig {
-        applicationId "com.example.iraqsystem"
-        minSdkVersion 21
-        targetSdkVersion 30
-        versionCode 1
-        versionName "1.0"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-}
-
-# NDK configuration
-ndk_version = 21.0.6113669
-
-# Additional settings for stable Android builds
-// Add other required configurations here if necessary
-// e.g., signing configs or build flavors
+[app]
+title = Shadow Monarch
+package.name = iraqsystem
+package.domain = org.test
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas
+version = 0.1
+requirements = python3,kivy==2.3.0,kivymd==1.2.0
+orientation = portrait
+osx.python_version = 3
+osx.kivy_version = 1.9.1
+fullscreen = 0
+android.archs = arm64-v8a, armeabi-v7a
+android.allow_backup = True
