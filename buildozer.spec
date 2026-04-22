@@ -12,11 +12,12 @@ android.allow_backup = False
 android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
-android.sdk = 33
 android.ndk = 25b
 android.bootstrap = sdl2
 android.wakelock = False
 p4a.branch = master
+android.sdk_path = /usr/local/lib/android/sdk
+android.ndk_path = /usr/local/lib/android/sdk/ndk/25.1.8937393
 
 [buildozer]
 log_level = 2
