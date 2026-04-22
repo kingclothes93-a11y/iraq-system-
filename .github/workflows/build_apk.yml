@@ -47,14 +47,28 @@ jobs:
           echo "504667f4c0de7af1a06de9f4b1727b84351f2910" >> ~/.buildozer/android/platform/android-sdk/licenses/google-gdk-license
           echo "84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
 
+      - name: Setup Android SDK
+        run: |
+          export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          cd $ANDROID_HOME/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip
+          mv cmdline-tools latest
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
       - name: Cache buildozer
         uses: actions/cache@v4
         with:
           path: ~/.buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}-v2
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}-v3
 
       - name: Build APK
         run: |
+          export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
           buildozer -v android debug 2>&1 | tee build.log
           BUILD_EXIT=${PIPESTATUS[0]}
           echo "Exit code: $BUILD_EXIT"
