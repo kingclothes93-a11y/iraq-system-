@@ -42,13 +42,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}-v4
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}-v5
 
       - name: Build APK
         run: |
+          mkdir -p /usr/local/lib/android/sdk/tools/bin
+          ln -sf /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager \
+            /usr/local/lib/android/sdk/tools/bin/sdkmanager || true
           buildozer -v android debug 2>&1 | tee build.log
           BUILD_EXIT=${PIPESTATUS[0]}
-          echo "Exit code: $BUILD_EXIT"
           ls -la bin/ 2>/dev/null || echo "No bin dir"
           exit $BUILD_EXIT
         env:
