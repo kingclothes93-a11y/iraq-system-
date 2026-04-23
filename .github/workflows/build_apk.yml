@@ -42,7 +42,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}-v7
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}-v8
 
       - name: Build APK
         run: |
