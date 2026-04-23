@@ -3,9 +3,9 @@ title = Shadow Monarch
 package.name = shadowmonarch
 package.domain = org.kingclothes
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json
+source.include_exts = py,png,jpg,kv,atlas,json,ttf
 version = 1.0
-requirements = python3,kivy==2.3.0,urllib3
+requirements = python3,kivy==2.3.0,urllib3,arabic-reshaper,python-bidi
 orientation = portrait
 android.archs = arm64-v8a
 android.allow_backup = False
