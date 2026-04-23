@@ -5,7 +5,7 @@ package.domain = org.kingclothes
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,json,ttf
 version = 1.0
-requirements = python3,kivy==2.3.0,urllib3,arabic-reshaper,python-bidi
+requirements = python3,kivy==2.3.0,urllib3
 orientation = portrait
 android.archs = arm64-v8a
 android.allow_backup = False
@@ -16,9 +16,6 @@ android.ndk = 25b
 android.bootstrap = sdl2
 android.wakelock = False
 p4a.branch = master
-android.sdk_path = /usr/local/lib/android/sdk
-android.ndk_path = /usr/local/lib/android/sdk/ndk/25.1.8937393
-android.cmdline_tools_path = /usr/local/lib/android/sdk/cmdline-tools/latest/bin
 
 [buildozer]
 log_level = 2
