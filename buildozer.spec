@@ -10,14 +10,13 @@ orientation = portrait
 android.archs = arm64-v8a
 android.allow_backup = False
 android.permissions = INTERNET
-android.api = 34
+android.api = 33
 android.minapi = 21
 android.ndk = 25b
-android.build_tools_version = 34.0.0
 android.bootstrap = sdl2
 android.wakelock = False
 p4a.branch = master
 
 [buildozer]
 log_level = 2
-warn_on_root = 0
+warn_on_root = 1
