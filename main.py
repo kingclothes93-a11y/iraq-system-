@@ -1,200 +1,91 @@
-import sys
 import os
-import sqlite3
-import datetime
-import hashlib
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.image import Image
-from kivy.graphics import Color, Rectangle, RoundedRectangle
-from kivy.clock import Clock
+from kivy.uix.label import Label
+from kivy.graphics import Color, RoundedRectangle, Rectangle
 from kivy.metrics import dp
+from kivy.core.window import Window
 from kivy.animation import Animation
 
-# Colors Configuration
-C = {
-    'bg': (0.02, 0.0, 0.06, 1),
-    'header': (0.06, 0.0, 0.16, 1),
-    'card': (0.10, 0.0, 0.22, 0.92),
-    'purple': (0.55, 0.0, 1.0, 1),
-    'purple2': (0.35, 0.0, 0.75, 1),
-    'green': (0.0, 0.8, 0.4, 1),
-    'red': (0.9, 0.1, 0.2, 1),
-    'text': (0.95, 0.95, 1.0, 1),
-}
+# --- ألوان ثيم ملك الظلال (Shadow Monarch) ---
+C_BG = (0.02, 0.0, 0.06, 1)      # الخلفية السوداء المزرقة
+C_PURPLE = (0.55, 0.0, 1.0, 1)  # البنفسجي الملكي
+C_MENU_BG = (0.07, 0, 0.15, 1)  # خلفية القائمة الجانبية
 
-DB = 'shadow.db'
-
-def init_db():
-    with sqlite3.connect(DB) as con:
-        c = con.cursor()
-        c.execute('CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY, shadow_id TEXT, level INTEGER DEFAULT 1)')
-        c.execute('SELECT COUNT(*) FROM profile')
-        if c.fetchone()[0] == 0:
-            sid = 'SM-' + hashlib.md5(str(datetime.datetime.now()).encode()).hexdigest()[:8].upper()
-            c.execute('INSERT INTO profile (shadow_id) VALUES (?)', (sid,))
-
-def apply_bg(widget, color, radius=0):
-    with widget.canvas.before:
-        Color(*color)
-        if radius:
-            widget._bg = RoundedRectangle(pos=widget.pos, size=widget.size, radius=[dp(radius)])
-        else:
-            widget._bg = Rectangle(pos=widget.pos, size=widget.size)
-    widget.bind(pos=lambda i,v: setattr(i._bg,'pos',v), size=lambda i,v: setattr(i._bg,'size',v))
-
-def styled_btn(text, color=None, radius=10, **kwargs):
-    color = color or C['purple2']
-    btn = Button(text=text, background_color=(0,0,0,0), **kwargs)
-    apply_bg(btn, color, radius)
-    return btn
-
-class SplashScreen(Screen):
-    def on_enter(self):
-        Clock.schedule_once(lambda dt: setattr(self.manager, 'current', 'lock'), 2)
+class ShadowBtn(Button):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        root = FloatLayout()
-        apply_bg(root, (0,0,0,1))
-        root.add_widget(Label(text="MALEK DHALAL", font_size=dp(40), bold=True, color=C['purple']))
-        self.add_widget(root)
+        self.background_color = (0,0,0,0)
+        with self.canvas.before:
+            Color(*C_PURPLE)
+            self.rect = RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(12)])
+        self.bind(pos=self._upd, size=self._upd)
+    def _upd(self, *args): self.rect.pos, self.rect.size = self.pos, self.size
 
-class LockScreen(Screen):
+# ─── شاشة الترحيب (البداية) ───
+class WelcomeScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.pin = ""
-        root = FloatLayout()
-        if os.path.exists('bg_lock.jpg'):
-            root.add_widget(Image(source='bg_lock.jpg', allow_stretch=True, keep_ratio=False))
-        else:
-            apply_bg(root, C['bg'])
-        
-        self.display = Label(text="ENTER SECRET CODE", pos_hint={'center_y': 0.8}, font_size=dp(22), color=C['purple'], bold=True)
-        root.add_widget(self.display)
+        layout = FloatLayout()
+        layout.add_widget(Label(text="SHADOW SYSTEM ACTIVE", font_size='25sp', color=C_PURPLE, pos_hint={'center_y': 0.5}))
+        layout.add_widget(Label(text="Open Menu to Start", font_size='14sp', pos_hint={'center_y': 0.4}))
+        self.add_widget(layout)
 
-        grid = GridLayout(cols=3, size_hint=(0.8, 0.45), pos_hint={'center_x': 0.5, 'center_y': 0.35}, spacing=dp(10))
-        for i in range(1, 10):
-            btn = styled_btn(str(i), font_size=dp(24), color=C['card'])
-            btn.bind(on_press=self.press)
-            grid.add_widget(btn)
-        
-        btn_clr = styled_btn("<", color=C['red'], font_size=dp(24))
-        btn_clr.bind(on_press=self.clear)
-        grid.add_widget(btn_clr)
-        
-        btn_0 = styled_btn("0", font_size=dp(24), color=C['card'])
-        btn_0.bind(on_press=self.press)
-        grid.add_widget(btn_0)
-
-        btn_ok = styled_btn("OK", color=C['purple'], font_size=dp(18))
-        btn_ok.bind(on_press=self.validate)
-        grid.add_widget(btn_ok)
-
-        root.add_widget(grid)
-        self.add_widget(root)
-
-    def press(self, instance):
-        if len(self.pin) < 5:
-            self.pin += instance.text
-            self.display.text = "*" * len(self.pin)
-
-    def clear(self, *a):
-        self.pin = ""
-        self.display.text = "ENTER SECRET CODE"
-
-    def validate(self, *a):
-        if self.pin == "20057":
-            self.manager.current = 'main'
-        else:
-            self.clear()
-            self.display.text = "WRONG CODE!"
-
-class MainScreen(Screen):
+# ─── الحاوية الرئيسية (نظام القائمة ≡) ───
+class MainContainer(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.menu_open = False
-        self.root = FloatLayout()
         
-        # 1. Background Layer
-        if os.path.exists('bg_main.jpg'):
-            self.root.add_widget(Image(source='bg_main.jpg', allow_stretch=True, keep_ratio=False))
-        else:
-            apply_bg(self.root, C['bg'])
+        # 1. مدير الشاشات (الحاوية اللي راح نحط بيها الأدوات مستقبلاً)
+        self.sm = ScreenManager(transition=FadeTransition())
+        self.sm.add_widget(WelcomeScreen(name='welcome'))
+        self.add_widget(self.sm)
 
-        # 2. Header Layer
-        header = BoxLayout(size_hint=(1, 0.08), pos_hint={'top': 1}, padding=dp(10))
-        apply_bg(header, C['header'])
+        # 2. القائمة الجانبية (Container)
+        self.menu = BoxLayout(orientation='vertical', size_hint=(0.6, 1), pos_hint={'x': -0.6}, padding=dp(15), spacing=dp(10))
+        with self.menu.canvas.before:
+            Color(*C_MENU_BG)
+            self.m_rect = Rectangle(pos=self.menu.pos, size=self.menu.size)
+        self.menu.bind(pos=self._upd_m, size=self._upd_m)
         
-        menu_trigger = Button(text="[b]≡[/b]", markup=True, font_size=dp(30), size_hint=(None, 1), width=dp(60), background_color=(0,0,0,0))
-        menu_trigger.bind(on_press=self.toggle_menu)
-        header.add_widget(menu_trigger)
-        header.add_widget(Label(text="MALEK DHALAL", bold=True, color=C['purple']))
-        self.root.add_widget(header)
-
-        # 3. Transparent Close Layer (Above Main, Below Menu)
-        self.close_layer = Button(size_hint=(1,1), background_color=(0,0,0,0), disabled=True, opacity=0)
-        self.close_layer.bind(on_press=self.toggle_menu)
-        self.root.add_widget(self.close_layer)
-
-        # 4. Navigation Panel (TOP LAYER)
-        self.menu_panel = FloatLayout(size_hint=(0.8, 1), pos_hint={'x': -0.8, 'y': 0})
-        apply_bg(self.menu_panel, (0.05, 0.0, 0.12, 0.95))
+        # عنوان القائمة
+        self.menu.add_widget(Label(text="MENU", font_size='20sp', size_hint_y=None, height=dp(80), color=C_PURPLE))
         
-        scroll = ScrollView(size_hint=(1, 0.8), pos_hint={'top': 0.85})
-        box = BoxLayout(orientation='vertical', size_hint_y=None, spacing=dp(10), padding=dp(20))
-        box.bind(minimum_height=box.setter('height'))
+        # زر تجريبي (راح نغيره لما نضيف أول أداة)
+        btn_home = ShadowBtn(text="Home", size_hint_y=None, height=dp(50))
+        btn_home.bind(on_release=lambda x: self.switch_to('welcome'))
+        self.menu.add_widget(btn_home)
         
-        tools = [('Tasks', 'tasks'), ('Notes', 'notes'), ('Snippets', 'snippets'), ('Calculator', 'calc'), ('Pomodoro', 'pomodoro')]
-        for name, screen in tools:
-            btn = styled_btn(name, size_hint_y=None, height=dp(60), color=C['card'])
-            btn.bind(on_press=lambda x, s=screen: self.nav(s))
-            box.add_widget(btn)
+        self.add_widget(self.menu)
+
+        # 3. زر القائمة العلوي (≡) اللي بالصورة مالتك
+        self.m_btn = Button(text="≡", size_hint=(None,None), size=(dp(60),dp(60)), 
+                             pos_hint={'top':1, 'right':1}, background_color=(0,0,0,0), 
+                             font_size='40sp', color=C_PURPLE)
+        self.m_btn.bind(on_release=self.toggle_menu)
+        self.add_widget(self.m_btn)
         
-        scroll.add_widget(box)
-        self.menu_panel.add_widget(scroll)
-        self.root.add_widget(self.menu_panel)
+        self.is_open = False
 
-        self.add_widget(self.root)
+    def _upd_m(self, *args): self.m_rect.pos, self.m_rect.size = self.menu.pos, self.menu.size
 
-    def toggle_menu(self, *a):
-        if self.menu_open:
-            anim = Animation(pos_hint={'x': -0.8}, duration=0.2, t='out_quad')
-            anim.start(self.menu_panel)
-            self.close_layer.disabled = True
-            self.menu_open = False
-        else:
-            anim = Animation(pos_hint={'x': 0}, duration=0.2, t='out_quad')
-            anim.start(self.menu_panel)
-            self.close_layer.disabled = False
-            self.menu_open = True
+    def toggle_menu(self, *args):
+        # حركة فتح وغلق القائمة
+        target_x = 0 if not self.is_open else -0.6
+        Animation(pos_hint={'x': target_x}, duration=0.25).start(self.menu)
+        self.is_open = not self.is_open
 
-    def nav(self, screen_name):
+    def switch_to(self, screen_name):
+        self.sm.current = screen_name
         self.toggle_menu()
-        self.manager.current = screen_name
 
-class ShadowMonarchApp(App):
+class ShadowApp(App):
     def build(self):
-        init_db()
-        sm = ScreenManager(transition=FadeTransition())
-        sm.add_widget(SplashScreen(name='splash'))
-        sm.add_widget(LockScreen(name='lock'))
-        sm.add_widget(MainScreen(name='main'))
-        
-        for s in ['tasks', 'notes', 'snippets', 'calc', 'pomodoro']:
-            sc = Screen(name=s)
-            apply_bg(sc, C['bg'])
-            sc.add_widget(Label(text=f"{s.upper()} SCREEN"))
-            btn_back = Button(text="BACK", size_hint=(None, None), size=(dp(100), dp(50)), pos_hint={'center_x': 0.5, 'y': 0.1})
-            btn_back.bind(on_press=lambda x: setattr(sm, 'current', 'main'))
-            sc.add_widget(btn_back)
-            sm.add_widget(sc)
-        return sm
+        Window.clearcolor = C_BG
+        return MainContainer()
 
 if __name__ == '__main__':
-    ShadowMonarchApp().run()
+    ShadowApp().run()
