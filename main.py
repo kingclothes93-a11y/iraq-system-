@@ -266,37 +266,81 @@ class LockScreen(Screen):
         root = FloatLayout()
         if os.path.exists('bg_lock.jpg'):
             root.add_widget(Image(source='bg_lock.jpg', allow_stretch=True,
-                                  keep_ratio=False, size_hint=(1,1), pos_hint={'x':0,'y':0}))
+                                  keep_ratio=False, size_hint=(1,1),
+                                  pos_hint={'x':0,'y':0}))
         else:
             bg(root, C['bg'])
+
         overlay = FloatLayout(size_hint=(1,1), pos_hint={'x':0,'y':0})
         with overlay.canvas.before:
-            Color(0,0,0,0.45)
+            Color(0,0,0,0.35)
             self._ov = Rectangle(pos=overlay.pos, size=overlay.size)
         overlay.bind(pos=lambda i,v: setattr(self._ov,'pos',v),
                      size=lambda i,v: setattr(self._ov,'size',v))
-        overlay.add_widget(lbl('MALEK DHALAL', size=36, color=C['purple'], bold=True,
-                               pos_hint={'center_x':0.5,'center_y':0.86},
-                               size_hint=(1,None), height=dp(52)))
-        overlay.add_widget(lbl('Enter Secret Code', size=13, color=C['sub'],
-                               pos_hint={'center_x':0.5,'center_y':0.77},
-                               size_hint=(1,None), height=dp(25)))
-        self.pin_display = lbl('○  ○  ○  ○  ○', size=28, color=C['purple'],
-                               pos_hint={'center_x':0.5,'center_y':0.65},
-                               size_hint=(1,None), height=dp(42))
-        overlay.add_widget(self.pin_display)
-        numpad = BoxLayout(orientation='vertical',
-                           pos_hint={'center_x':0.5,'center_y':0.37},
-                           size_hint=(0.75,0.42), spacing=dp(8))
-        for row in [['1','2','3'],['4','5','6'],['7','8','9'],['<','0','OK']]:
-            rl = BoxLayout(spacing=dp(8))
+
+        # Title
+        title_box = BoxLayout(
+            pos_hint={'center_x':0.5,'center_y':0.88},
+            size_hint=(0.9,None), height=dp(60),
+            orientation='vertical')
+        bg(title_box, (0,0,0,0.3), radius=12)
+        title_box.add_widget(lbl('MALEK DHALAL', size=32,
+                                  color=C['purple'], bold=True))
+        title_box.add_widget(lbl('Shadow Monarch System', size=12,
+                                  color=C['sub']))
+        overlay.add_widget(title_box)
+
+        # PIN display box
+        pin_box = BoxLayout(
+            pos_hint={'center_x':0.5,'center_y':0.70},
+            size_hint=(0.7,None), height=dp(55),
+            orientation='horizontal',
+            spacing=dp(12), padding=dp(10))
+        bg(pin_box, (0,0,0,0.5), radius=14)
+
+        self.pin_dots = []
+        for _ in range(5):
+            dot = lbl('○', size=26, color=C['purple'])
+            self.pin_dots.append(dot)
+            pin_box.add_widget(dot)
+        overlay.add_widget(pin_box)
+
+        # Numpad
+        numpad = BoxLayout(
+            orientation='vertical',
+            pos_hint={'center_x':0.5,'center_y':0.38},
+            size_hint=(0.82,0.44),
+            spacing=dp(10))
+
+        for row in [['1','2','3'],['4','5','6'],
+                    ['7','8','9'],['CLR','0','OK']]:
+            rl = BoxLayout(spacing=dp(10))
             for t in row:
-                col = C['purple2'] if t=='OK' else (C['red'][0],C['red'][1],C['red'][2],0.7) if t=='<' else C['card']
-                b = styled_btn(t, color=col, font_size=20)
+                if t == 'OK':
+                    col = (0.4, 0.0, 0.85, 1)
+                elif t == 'CLR':
+                    col = (0.7, 0.0, 0.1, 1)
+                else:
+                    col = (0.15, 0.0, 0.35, 0.9)
+                b = Button(
+                    text=t,
+                    font_size=dp(22),
+                    background_color=(0,0,0,0),
+                    color=(1,1,1,1),
+                    background_normal='',
+                    bold=True
+                )
+                with b.canvas.before:
+                    Color(*col)
+                    b._bg = RoundedRectangle(
+                        pos=b.pos, size=b.size, radius=[dp(12)])
+                b.bind(pos=lambda i,v: setattr(i._bg,'pos',v),
+                       size=lambda i,v: setattr(i._bg,'size',v))
                 b.bind(on_press=self.on_btn)
                 rl.add_widget(b)
             numpad.add_widget(rl)
         overlay.add_widget(numpad)
+
         self.err_lbl = lbl('', size=13, color=C['red'],
                            pos_hint={'center_x':0.5,'center_y':0.10},
                            size_hint=(1,None), height=dp(28))
@@ -307,7 +351,7 @@ class LockScreen(Screen):
     def on_btn(self, btn):
         t = btn.text
         vibrate_short()
-        if t == '<':
+        if t == 'CLR':
             self.pin_entered = self.pin_entered[:-1]
         elif t == 'OK':
             if self.pin_entered == '20057':
@@ -315,17 +359,25 @@ class LockScreen(Screen):
                 self.manager.transition = FadeTransition(duration=0.4)
                 self.manager.current = 'main'
             else:
-                self.err_lbl.text = 'Wrong code!'
+                self.err_lbl.text = 'Wrong code! Try again'
                 self.pin_entered = ''
-                self.pin_display.text = '○  ○  ○  ○  ○'
-                Clock.schedule_once(lambda dt: setattr(self.err_lbl,'text',''), 2)
+                for dot in self.pin_dots:
+                    dot.text = '○'
+                    dot.color = C['purple']
+                Clock.schedule_once(
+                    lambda dt: setattr(self.err_lbl,'text',''), 2)
             return
         else:
             if len(self.pin_entered) < 5:
                 self.pin_entered += t
-        f = '●  ' * len(self.pin_entered)
-        e = '○  ' * (5 - len(self.pin_entered))
-        self.pin_display.text = (f + e).strip()
+
+        for i, dot in enumerate(self.pin_dots):
+            if i < len(self.pin_entered):
+                dot.text = '●'
+                dot.color = (1,1,1,1)
+            else:
+                dot.text = '○'
+                dot.color = C['purple']
 
     def _update_login(self):
         try:
@@ -334,13 +386,16 @@ class LockScreen(Screen):
             last = p.get('last_login','')
             streak = p.get('streak', 0)
             if last != today:
-                yesterday = str(datetime.date.today() - datetime.timedelta(days=1))
+                yesterday = str(
+                    datetime.date.today() - datetime.timedelta(days=1))
                 streak = streak + 1 if last == yesterday else 1
                 update_profile(last_login=today, streak=streak)
             if 0 <= datetime.datetime.now().hour < 4:
                 con = sqlite3.connect(DB)
                 c = con.cursor()
-                c.execute("UPDATE achievements SET earned=1,date=? WHERE name='night_owl' AND earned=0",(today,))
+                c.execute(
+                    "UPDATE achievements SET earned=1,date=? "
+                    "WHERE name='night_owl' AND earned=0", (today,))
                 con.commit()
                 con.close()
         except Exception:
@@ -372,7 +427,7 @@ class MainScreen(Screen):
                      size=lambda i,v: setattr(self._ov,'size',v))
 
         # زر الهامبرغر
-        menu_btn = styled_btn('☰', color=(0,0,0,0.5), fg=(1,1,1,1),
+        menu_btn = styled_btn('= =\n= =', color=(0,0,0,0.5),
                               font_size=28, size_hint=(None,None),
                               width=dp(55), height=dp(55),
                               pos_hint={'x':0.03,'top':0.97})
