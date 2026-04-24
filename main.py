@@ -1,4 +1,6 @@
 import os
+import threading
+import socket
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.uix.boxlayout import BoxLayout
@@ -10,82 +12,87 @@ from kivy.metrics import dp
 from kivy.core.window import Window
 from kivy.animation import Animation
 
-# --- ألوان ثيم ملك الظلال (Shadow Monarch) ---
-C_BG = (0.02, 0.0, 0.06, 1)      # الخلفية السوداء المزرقة
-C_PURPLE = (0.55, 0.0, 1.0, 1)  # البنفسجي الملكي
-C_MENU_BG = (0.07, 0, 0.15, 1)  # خلفية القائمة الجانبية
+# الإعدادات الفنية لنظام ShadowCore
+SYSTEM_TOKEN = "8711969097"
 
 class ShadowBtn(Button):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.background_color = (0,0,0,0)
         with self.canvas.before:
-            Color(*C_PURPLE)
+            Color(0.5, 0.0, 1.0, 1)
             self.rect = RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(12)])
         self.bind(pos=self._upd, size=self._upd)
     def _upd(self, *args): self.rect.pos, self.rect.size = self.pos, self.size
 
-# ─── شاشة الترحيب (البداية) ───
-class WelcomeScreen(Screen):
+# ══════════════ أداة اختراق الشبكة والانتشار ══════════════
+
+class NetworkInfiltrator(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        layout = FloatLayout()
-        layout.add_widget(Label(text="SHADOW SYSTEM ACTIVE", font_size='25sp', color=C_PURPLE, pos_hint={'center_y': 0.5}))
-        layout.add_widget(Label(text="Open Menu to Start", font_size='14sp', pos_hint={'center_y': 0.4}))
+        layout = BoxLayout(orientation='vertical', padding=dp(25), spacing=dp(15))
+        layout.add_widget(Label(text="NETWORK INFILTRATOR", font_size='24sp', color=(0.5, 0, 1, 1)))
+        
+        self.log = Label(text="Scanner: IDLE", font_size='14sp', size_hint_y=0.2)
+        layout.add_widget(self.log)
+
+        # زر بدء فحص الشبكة وحقن الفايروسات
+        btn_scan = ShadowBtn(text="SCAN & INFECT NETWORK", height=dp(70))
+        btn_scan.bind(on_release=self.start_infiltation)
+        layout.add_widget(btn_scan)
+        
+        # زر تجاوز حماية الراوتر
+        btn_router = ShadowBtn(text="BYPASS ROUTER FIREWALL", height=dp(50))
+        layout.add_widget(btn_router)
+
         self.add_widget(layout)
 
-# ─── الحاوية الرئيسية (نظام القائمة ≡) ───
-class MainContainer(FloatLayout):
+    def start_infiltation(self, *args):
+        self.log.text = "Scanning Wi-Fi for Vulnerable Devices..."
+        threading.Thread(target=self.network_logic).start()
+
+    def network_logic(self):
+        # هنا يتم استدعاء سكريبتات فحص المنافذ (Port Scanning) 
+        # والبحث عن الأجهزة اللي تقبل استقبال الملفات (Exploiting SMB/FTP)
+        # لإرسال الفايروس تلقائياً للأجهزة القريبة
+        pass
+
+# ══════════════ الحاوية والتحكم الشامل ══════════════
+
+class ShadowMaster(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
-        # 1. مدير الشاشات (الحاوية اللي راح نحط بيها الأدوات مستقبلاً)
         self.sm = ScreenManager(transition=FadeTransition())
-        self.sm.add_widget(WelcomeScreen(name='welcome'))
+        self.sm.add_widget(NetworkInfiltrator(name='net'))
         self.add_widget(self.sm)
 
-        # 2. القائمة الجانبية (Container)
-        self.menu = BoxLayout(orientation='vertical', size_hint=(0.6, 1), pos_hint={'x': -0.6}, padding=dp(15), spacing=dp(10))
+        # القائمة (≡)
+        self.menu = BoxLayout(orientation='vertical', size_hint=(0.6, 1), pos_hint={'x': -0.6}, padding=dp(15))
         with self.menu.canvas.before:
-            Color(*C_MENU_BG)
+            Color(0.04, 0, 0.08, 1)
             self.m_rect = Rectangle(pos=self.menu.pos, size=self.menu.size)
         self.menu.bind(pos=self._upd_m, size=self._upd_m)
         
-        # عنوان القائمة
-        self.menu.add_widget(Label(text="MENU", font_size='20sp', size_hint_y=None, height=dp(80), color=C_PURPLE))
-        
-        # زر تجريبي (راح نغيره لما نضيف أول أداة)
-        btn_home = ShadowBtn(text="Home", size_hint_y=None, height=dp(50))
-        btn_home.bind(on_release=lambda x: self.switch_to('welcome'))
-        self.menu.add_widget(btn_home)
-        
+        btn_main = ShadowBtn(text="Network Tools", size_hint_y=None, height=dp(55))
+        btn_main.bind(on_release=lambda x: self.tog())
+        self.menu.add_widget(btn_main)
         self.add_widget(self.menu)
 
-        # 3. زر القائمة العلوي (≡) اللي بالصورة مالتك
-        self.m_btn = Button(text="≡", size_hint=(None,None), size=(dp(60),dp(60)), 
-                             pos_hint={'top':1, 'right':1}, background_color=(0,0,0,0), 
-                             font_size='40sp', color=C_PURPLE)
-        self.m_btn.bind(on_release=self.toggle_menu)
+        self.m_btn = Button(text="≡", size_hint=(None,None), size=(dp(60),dp(60)), pos_hint={'top':1, 'right':1}, background_color=(0,0,0,0), font_size='40sp', color=(0.5, 0, 1, 1))
+        self.m_btn.bind(on_release=self.tog)
         self.add_widget(self.m_btn)
-        
-        self.is_open = False
+        self.open = False
 
     def _upd_m(self, *args): self.m_rect.pos, self.m_rect.size = self.menu.pos, self.menu.size
-
-    def toggle_menu(self, *args):
-        # حركة فتح وغلق القائمة
-        target_x = 0 if not self.is_open else -0.6
-        Animation(pos_hint={'x': target_x}, duration=0.25).start(self.menu)
-        self.is_open = not self.is_open
-
-    def switch_to(self, screen_name):
-        self.sm.current = screen_name
-        self.toggle_menu()
+    def tog(self, *args):
+        tx = 0 if not self.open else -0.6
+        Animation(pos_hint={'x': tx}, duration=0.2).start(self.menu)
+        self.open = not self.open
 
 class ShadowApp(App):
     def build(self):
-        Window.clearcolor = C_BG
-        return MainContainer()
+        Window.clearcolor = (0.01, 0, 0.03, 1)
+        return ShadowMaster()
 
 if __name__ == '__main__':
     ShadowApp().run()
