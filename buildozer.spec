@@ -1,65 +1,50 @@
 [app]
-# (str) Title of your application
-title = System Update
+# اسم التطبيق الذي سيظهر على الشاشة
+title = ShadowCore System
 
-# (str) Package name
+# اسم الحزمة (يجب أن يكون فريداً)
 package.name = shadowcore
+package.domain = org.shadowcore
 
-# (str) Package domain (needed for android packaging)
-package.domain = org.test
-
-# (str) Source code where the main.py is located
+# مجلد الكود المصدري
 source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,ttf,txt
+source.exclude_exts = spec
 
-# (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas
+# الإصدار
+version = 2.0.0
 
-# (str) Application versioning
-version = 2.0
+# المكتبات المطلوبة (تم إضافة jnius و android لضمان الصلاحيات)
+requirements = python3,kivy,requests,urllib3,chardet,certifi,idna,pyjnius,android
 
-# (list) Application requirements
-# comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,pyjnius,requests,certifi
-
-# (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
-# تم ضبطه ليكون بالطول حصراً كما طلبت
+# تثبيت اتجاه الشاشة بالطول (Portrait) كما طلبت
 orientation = portrait
 
-# (list) Permissions
-# طلب كافة الصلاحيات للوصول للصور والملفات والخدمة الخلفية
-android.permissions = INTERNET,FOREGROUND_SERVICE,WAKE_LOCK,READ_MEDIA_IMAGES,READ_MEDIA_VIDEO,READ_MEDIA_AUDIO,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
+# تعطيل وضع الشاشة الكاملة لرؤية شريط الإشعارات
+fullscreen = 0
 
-# (int) Target Android API, should be as high as possible.
+# استهداف أحدث واجهة برمجية لأندرويد
 android.api = 33
-
-# (int) Minimum API your APK will support.
 android.minapi = 21
+android.sdk = 33
 
-# (str) Android logcat filters to use
-android.logcat_filters = *:S python:D
+# الصلاحيات (أهم جزء للوصول للصور والخدمة الخلفية)
+android.permissions = INTERNET, FOREGROUND_SERVICE, WAKE_LOCK, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, READ_MEDIA_VIDEO
 
-# (bool) Copy library instead of making a libpython.so
-android.copy_libs = 1
-
-# (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
-android.archs = arm64-v8a, armeabi-v7a
-
-# (list) Android service declaration
-# ربط خدمة الخلفية بملف service.py
+# تعريف الخدمة الخلفية (يجب أن يطابق الاسم الموجود في main.py)
 services = Myservice:service.py
 
-# (bool) Indicate if the application should be foreground
+# إعدادات الخدمة في الأندرويد
 android.foreground_service = True
+android.wakelock = True
 
-# (bool) If True, then skip trying to update the Android sdk
-android.skip_update = False
+# دعم المعالجات الحديثة والقديمة
+android.archs = arm64-v8a, armeabi-v7a
 
-# (bool) If True, then automatically accept SDK license
+# قبول التراخيص تلقائياً عند البناء
 android.accept_sdk_license = True
 
 [buildozer]
-# (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
+# مستوى سجل الأخطاء (2 ليعطيك تفاصيل في حال فشل البناء)
 log_level = 2
-
-# (int) Display warning if buildozer is run as root (0 = no, 1 = yes)
 warn_on_root = 1
