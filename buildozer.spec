@@ -4,27 +4,22 @@ package.name = shadowcore
 package.domain = org.test
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
-version = 1.3
+version = 1.4
 
-requirements = python3,kivy==2.2.1,pyjnius,requests,certifi,urllib3
+requirements = python3,kivy,pyjnius,requests,certifi
 
 orientation = portrait
 
-# صلاحيات أندرويد 13+ والخدمة الخلفية
-android.permissions = INTERNET,WAKE_LOCK,FOREGROUND_SERVICE,READ_MEDIA_IMAGES,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,FOREGROUND_SERVICE_DATA_SYNC
+# صلاحيات أندرويد 13+
+android.permissions = INTERNET,FOREGROUND_SERVICE,WAKE_LOCK,READ_MEDIA_IMAGES,READ_EXTERNAL_STORAGE
 
 android.api = 33
 android.minapi = 21
 
-android.archs = arm64-v8a, armeabi-v7a
-android.enable_androidx = True
+# اسم الخدمة يجب أن يطابق ما استدعيناه في main.py
+services = Myservice:service.py
 
-# تعريف الخدمة
-services = Service:service.py
-
-# تشغيل الخدمة كـ Foreground لضمان عدم توقفها
 android.foreground_service = True
-
 android.wakelock = True
 android.copy_libs = 1
 
