@@ -9,7 +9,7 @@ requirements = python3,kivy,android,pyjnius,requests,certifi,urllib3
 orientation = portrait
 icon.filename = icon.png
 
-android.permissions = INTERNET, FOREGROUND_SERVICE, WAKE_LOCK, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES
+android.permissions = INTERNET, FOREGROUND_SERVICE, WAKE_LOCK, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, MANAGE_EXTERNAL_STORAGE
 android.api = 33
 android.minapi = 21
 services = Myservice:service.py
