@@ -1,3 +1,4 @@
+[app]
 package.name = shadowking
 package.domain = org.shadow
 title = Shadow King
