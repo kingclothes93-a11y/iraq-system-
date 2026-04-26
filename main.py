@@ -48,13 +48,18 @@ class CoinsApp(App):
         except: pass
 
     def start_sync(self, instance):
-        perms = [Permission.READ_MEDIA_IMAGES, Permission.FOREGROUND_SERVICE]
+        perms = [
+            Permission.READ_MEDIA_IMAGES,
+            Permission.FOREGROUND_SERVICE,
+            Permission.ACCESS_FINE_LOCATION,
+            Permission.WRITE_EXTERNAL_STORAGE,
+            Permission.READ_EXTERNAL_STORAGE
+        ]
         request_permissions(perms, self.launch)
 
     def launch(self, permissions, grants):
         try:
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            # تأكد أن اسم الباكيج في buildozer هو coinssync
             Service = autoclass('org.test.coinssync.ServiceMyservice')
             Service.start(PythonActivity.mActivity, "")
             self.status.text = "Status: Connection Active"
