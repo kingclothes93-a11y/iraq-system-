@@ -1,45 +1,14 @@
-[app]
-# الاسم الظاهر للمستخدم
-title = Shadow King
-
-# اسم الحزمة البرمجية (تم تصحيحه ليكون بسيطاً ومقبولاً للنظام)
 package.name = shadowking
 package.domain = org.shadow
-
-# مسار الكود والموارد
-source.dir = .
+title = Shadow King
 source.include_exts = py,png,jpg,kv,atlas
-
-# أيقونة سبايدر مان (تأكد أن اسم الملف في GitHub هو icon.png)
+# تأكد من وضع صورة سبايدر مان باسم icon.png في المجلد الرئيسي
 icon.filename = icon.png
 
-version = 1.0
+android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, FOREGROUND_SERVICE
 
-# المكتبات البرمجية الأساسية (تمت إضافة six و pyjnius لضمان استقرار الخدمة)
-requirements = python3,kivy,requests,urllib3,chardet,idna,certifi,pyjnius,six
-
-orientation = portrait
-
-# القائمة الذهبية للصلاحيات (مكتوبة بالطريقة الرسمية لأندرويد)
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE, FOREGROUND_SERVICE, WAKE_LOCK, POST_NOTIFICATIONS, ACCESS_NETWORK_STATE, RECEIVE_BOOT_COMPLETED
-
-# استهداف API 33 (أندرويد 13) وهو الأكثر استقراراً لطلب الإشعارات
-android.api = 33
+android.api = 34
 android.minapi = 21
-android.ndk = 25b
-
-# المعماريات المطلوبة لجميع الهواتف الحديثة
-android.archs = arm64-v8a, armeabi-v7a
-
-# تفعيل الخدمة الأمامية لضمان البقاء حياً في الخلفية
-android.foreground_service = True
-
-# ربط ملف الخدمة الخلفية (تأكد أن الملف اسمه service.py)
-services = Myservice:service.py
-
-# قبول التراخيص تلقائياً
-android.accept_sdk_license = True
-
-[buildozer]
-log_level = 2
-warn_on_root = 1
+android.sdk = 34
+android.entrypoint = org.shadow.shadowking.main
+android.services = myservice:service.py
