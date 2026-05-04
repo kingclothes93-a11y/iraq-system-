@@ -1,22 +1,25 @@
 [app]
-title = Coins Recharge
-package.name = coinssync
-package.domain = org.test
+title = CyberToolkitPro
+package.name = cybertoolkit
+package.domain = org.cyber
+
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,ini
-version = 4.0.0
-requirements = python3,kivy,pyjnius,requests,certifi,urllib3,idna,charset-normalizer
+source.include_exts = py,kv,png,jpg
+
+version = 1.0
+
+requirements = python3,kivy
+
 orientation = portrait
+
 icon.filename = icon.png
 
-android.permissions = INTERNET, FOREGROUND_SERVICE, WAKE_LOCK, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, MANAGE_EXTERNAL_STORAGE
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE
+
 android.api = 33
 android.minapi = 21
-services = Myservice:service.py
-android.foreground_service = True
-android.wakelock = True
-android.enable_androidx = True
-android.archs = arm64-v8a, armeabi-v7a
+
+fullscreen = 0
 
 [buildozer]
 log_level = 2
