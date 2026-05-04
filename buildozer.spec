@@ -1,25 +1,21 @@
 [app]
-title = CyberToolkitPro
+title = CyberToolkitPRO
 package.name = cybertoolkit
 package.domain = org.cyber
 
 source.dir = .
-source.include_exts = py,kv,png,jpg
+source.include_exts = py,kv
 
-version = 1.0
+version = 3.0
 
-requirements = python3,kivy
+requirements = python3,kivy,requests
 
 orientation = portrait
 
-icon.filename = icon.png
-
-android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE
+android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE
 
 android.api = 33
 android.minapi = 21
-
-fullscreen = 0
 
 [buildozer]
 log_level = 2
