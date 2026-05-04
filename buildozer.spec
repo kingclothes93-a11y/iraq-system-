@@ -1,10 +1,10 @@
 [app]
-title = CyberToolkit
-package.name = cybertoolkit
-package.domain = org.cyber
+title = CyberApp
+package.name = cyberapp
+package.domain = org.test
 
 source.dir = .
-source.include_exts = py,kv
+source.include_exts = py
 
 version = 1.0
 
