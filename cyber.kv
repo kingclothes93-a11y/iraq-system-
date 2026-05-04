@@ -1,0 +1,68 @@
+<CyberUI>:
+    do_default_tab: False
+
+    TabbedPanelItem:
+        text: "Scanner"
+        BoxLayout:
+            orientation: "vertical"
+            padding: 10
+            spacing: 10
+
+            TextInput:
+                id: ip_input
+                hint_text: "Enter IP"
+
+            Button:
+                text: "Scan Ports"
+                on_press: root.scan_ports(ip_input.text)
+
+    TabbedPanelItem:
+        text: "Ping"
+        BoxLayout:
+            orientation: "vertical"
+
+            TextInput:
+                id: ping_input
+                hint_text: "Enter Host"
+
+            Button:
+                text: "Ping"
+                on_press: root.ping_host(ping_input.text)
+
+    TabbedPanelItem:
+        text: "DNS"
+        BoxLayout:
+            orientation: "vertical"
+
+            TextInput:
+                id: dns_input
+                hint_text: "Enter Domain"
+
+            Button:
+                text: "Lookup"
+                on_press: root.dns_lookup(dns_input.text)
+
+    TabbedPanelItem:
+        text: "Device"
+        BoxLayout:
+            orientation: "vertical"
+
+            Button:
+                text: "Get Info"
+                on_press: root.device_info()
+
+    TabbedPanelItem:
+        text: "Password"
+        BoxLayout:
+            orientation: "vertical"
+
+            Button:
+                text: "Generate"
+                on_press: root.generate_password()
+
+    BoxLayout:
+        size_hint_y: 0.3
+
+        TextInput:
+            text: root.output
+            readonly: True
