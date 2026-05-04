@@ -1,68 +1,108 @@
-<CyberUI>:
-    do_default_tab: False
+Manager:
+    LoginScreen:
+    MainScreen:
 
-    TabbedPanelItem:
-        text: "Scanner"
-        BoxLayout:
-            orientation: "vertical"
-            padding: 10
-            spacing: 10
+<LoginScreen>:
+    name: "login"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 40
+        spacing: 20
+        Label:
+            text: "Cyber Toolkit PRO"
+        TextInput:
+            id: pass_input
+            password: True
+            hint_text: "Password"
+        Button:
+            text: "Login"
+            on_press: root.check_password()
 
-            TextInput:
-                id: ip_input
-                hint_text: "Enter IP"
-
-            Button:
-                text: "Scan Ports"
-                on_press: root.scan_ports(ip_input.text)
-
-    TabbedPanelItem:
-        text: "Ping"
-        BoxLayout:
-            orientation: "vertical"
-
-            TextInput:
-                id: ping_input
-                hint_text: "Enter Host"
-
-            Button:
-                text: "Ping"
-                on_press: root.ping_host(ping_input.text)
-
-    TabbedPanelItem:
-        text: "DNS"
-        BoxLayout:
-            orientation: "vertical"
-
-            TextInput:
-                id: dns_input
-                hint_text: "Enter Domain"
-
-            Button:
-                text: "Lookup"
-                on_press: root.dns_lookup(dns_input.text)
-
-    TabbedPanelItem:
-        text: "Device"
-        BoxLayout:
-            orientation: "vertical"
-
-            Button:
-                text: "Get Info"
-                on_press: root.device_info()
-
-    TabbedPanelItem:
-        text: "Password"
-        BoxLayout:
-            orientation: "vertical"
-
-            Button:
-                text: "Generate"
-                on_press: root.generate_password()
+<MainScreen>:
+    name: "main"
 
     BoxLayout:
-        size_hint_y: 0.3
+        orientation: "vertical"
+
+        TabbedPanel:
+            do_default_tab: False
+
+            TabbedPanelItem:
+                text: "Network"
+                BoxLayout:
+                    orientation: "vertical"
+                    TextInput:
+                        id: ip
+                        hint_text: "IP"
+                    Button:
+                        text: "Port Scan"
+                        on_press: root.scan_ports(ip.text)
+                    Button:
+                        text: "Network Scan"
+                        on_press: root.network_scan()
+
+            TabbedPanelItem:
+                text: "Web"
+                BoxLayout:
+                    orientation: "vertical"
+                    TextInput:
+                        id: url
+                        hint_text: "URL"
+                    Button:
+                        text: "Headers"
+                        on_press: root.headers(url.text)
+                    Button:
+                        text: "Security"
+                        on_press: root.security(url.text)
+
+            TabbedPanelItem:
+                text: "Tools"
+                BoxLayout:
+                    orientation: "vertical"
+                    TextInput:
+                        id: tool
+                        hint_text: "IP / Domain"
+                    Button:
+                        text: "Ping"
+                        on_press: root.ping_host(tool.text)
+                    Button:
+                        text: "DNS"
+                        on_press: root.dns_lookup(tool.text)
+                    Button:
+                        text: "IP Info"
+                        on_press: root.ip_info(tool.text)
+
+            TabbedPanelItem:
+                text: "CVE"
+                BoxLayout:
+                    orientation: "vertical"
+                    TextInput:
+                        id: cve
+                        hint_text: "Keyword"
+                    Button:
+                        text: "Search"
+                        on_press: root.cve(cve.text)
+
+            TabbedPanelItem:
+                text: "Security"
+                BoxLayout:
+                    orientation: "vertical"
+                    Button:
+                        text: "Generate Password"
+                        on_press: root.password()
+
+            TabbedPanelItem:
+                text: "System"
+                BoxLayout:
+                    orientation: "vertical"
+                    Button:
+                        text: "Device Info"
+                        on_press: root.device()
+                    Button:
+                        text: "Save Report"
+                        on_press: root.save()
 
         TextInput:
+            size_hint_y: 0.3
             text: root.output
             readonly: True
