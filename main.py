@@ -10,10 +10,8 @@ from kivy.clock import Clock
 import requests
 import json
 
-# إعدادات النافذة
-Window.clearcolor = (0.05, 0.05, 0.1, 1)  # خلفية داكنة
+Window.clearcolor = (0.05, 0.05, 0.1, 1)
 
-# ضع مفتاح OpenRouter الخاص بك هنا
 API_KEY = "ضع_مفتاحك_هنا"
 MODEL = "cognitivecomputations/dolphin-mixtral"
 
@@ -23,13 +21,11 @@ class ChatApp(App):
         
         main_layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
         
-        # منطقة المحادثة
         self.scroll = ScrollView(size_hint=(1, 0.85))
         self.chat_area = BoxLayout(orientation='vertical', size_hint_y=None)
         self.chat_area.bind(minimum_height=self.chat_area.setter('height'))
         self.scroll.add_widget(self.chat_area)
         
-        # شريط الإدخال
         input_layout = BoxLayout(size_hint=(1, 0.1), spacing=10)
         
         self.input_text = TextInput(
@@ -41,18 +37,10 @@ class ChatApp(App):
         )
         self.input_text.bind(on_text_validate=self.send_message)
         
-        send_btn = Button(
-            text="إرسال",
-            size_hint=(0.2, 1),
-            background_color=(0.2, 0.7, 0.3, 1)
-        )
+        send_btn = Button(text="إرسال", size_hint=(0.2, 1), background_color=(0.2, 0.7, 0.3, 1))
         send_btn.bind(on_press=self.send_message)
         
-        clear_btn = Button(
-            text="مسح",
-            size_hint=(0.15, 1),
-            background_color=(0.7, 0.2, 0.2, 1)
-        )
+        clear_btn = Button(text="مسح", size_hint=(0.15, 1), background_color=(0.7, 0.2, 0.2, 1))
         clear_btn.bind(on_press=self.clear_chat)
         
         input_layout.add_widget(self.input_text)
@@ -62,7 +50,6 @@ class ChatApp(App):
         main_layout.add_widget(self.scroll)
         main_layout.add_widget(input_layout)
         
-        # رسالة ترحيب
         self.add_message("ثيودور", "أهلاً بك. أنا خبير الأمن السيبراني. كيف يمكنني مساعدتك؟")
         
         return main_layout
@@ -87,8 +74,6 @@ class ChatApp(App):
         
         self.add_message("أنت", user_text)
         self.input_text.text = ""
-        
-        # استدعاء النموذج غير المقيد
         Clock.schedule_once(lambda dt: self.get_ai_response(user_text), 0.5)
     
     def get_ai_response(self, user_text):
