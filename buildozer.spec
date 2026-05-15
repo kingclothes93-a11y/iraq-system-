@@ -13,5 +13,5 @@ fullscreen = 0
 android.permissions = INTERNET
 android.api = 30
 android.minapi = 21
-android.ndk = 23b
+android.ndk = 27
 android.gradle_dependencies = 
