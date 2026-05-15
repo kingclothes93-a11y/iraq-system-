@@ -1,83 +1,32 @@
 name: Build APK
-
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
+      
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-
-      - name: Install system dependencies
+          python-version: '3.10'
+          
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git zip unzip openjdk-17-jdk python3-pip \
-            autoconf libtool pkg-config zlib1g-dev \
-            libncurses5-dev libncursesw5-dev libtinfo5 \
-            cmake libffi-dev libssl-dev build-essential ccache
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Install buildozer
-        run: |
-          pip install --upgrade pip setuptools
-          pip install Cython==0.29.33
-          pip install buildozer==1.5.0
-          pip install virtualenv
-
-      - name: Setup Android SDK manually
-        run: |
-          mkdir -p ~/.buildozer/android/platform
-          cd ~/.buildozer/android/platform
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          mkdir -p android-sdk/cmdline-tools
-          unzip -q commandlinetools-linux-11076708_latest.zip -d android-sdk/cmdline-tools
-          mv android-sdk/cmdline-tools/cmdline-tools android-sdk/cmdline-tools/latest
-          mkdir -p android-sdk/tools/bin
-          ln -sf ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-            ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
-          export ANDROID_HOME=~/.buildozer/android/platform/android-sdk
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-
-      - name: Cache buildozer
-        uses: actions/cache@v4
-        with:
-          path: ~/.buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}-v11
-
+          sudo apt update
+          sudo apt install -y python3-pip build-essential git python3-dev ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
+          pip install buildozer cython
+          
       - name: Build APK
         run: |
-          buildozer -v android debug 2>&1 | tee build.log
-          BUILD_EXIT=${PIPESTATUS[0]}
-          ls -la bin/ 2>/dev/null || echo "No bin dir"
-          exit $BUILD_EXIT
-
+          buildozer android debug
+          
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: Shadow-Monarch-APK
+          name: app-debug
           path: bin/*.apk
-          if-no-files-found: warn
-
-      - name: Upload Logs
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: Build-Logs
-          path: build.log
