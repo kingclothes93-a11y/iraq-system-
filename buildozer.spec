@@ -1,22 +1,17 @@
 [app]
-title = CyberApp
-package.name = cyberapp
-package.domain = org.test
-
+title = Cyber Advisor
+package.name = cyberadvisor
+package.domain = com.iraqdev
 source.dir = .
-source.include_exts = py
-
+source.include_exts = py,png,jpg,kv,atlas
 version = 1.0
-
 requirements = python3,kivy,requests
-
 orientation = portrait
-
+osx.python_version = 3
+osx.kivy_version = 2.1.0
+fullscreen = 0
 android.permissions = INTERNET
-
-android.api = 33
+android.api = 30
 android.minapi = 21
-android.archs = arm64-v8a
-
-[buildozer]
-log_level = 1
+android.ndk = 23b
+android.gradle_dependencies = 
