@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -21,21 +21,33 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y \
-          openjdk-17-jdk unzip zip git \
-          autoconf libtool pkg-config \
-          zlib1g-dev libncurses5-dev libncursesw5-dev \
-          libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt install -y openjdk-17-jdk unzip zip git
 
       - name: Install Buildozer
         run: |
           pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Accept Android Licenses
+      # 🔥 تثبيت Android SDK الجديد
+      - name: Install Android SDK cmdline-tools
         run: |
-          mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
+          unzip tools.zip
+          mv cmdline-tools latest
+
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+
+      # ✅ قبول الرخص
+      - name: Accept Licenses
+        run: yes | sdkmanager --licenses
+
+      # ✅ تثبيت SDK المطلوب
+      - name: Install SDK packages
+        run: |
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
       - name: Build APK
         run: |
