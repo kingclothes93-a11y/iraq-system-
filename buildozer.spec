@@ -17,11 +17,9 @@ fullscreen = 0
 # Android config
 android.api = 33
 android.minapi = 21
-android.sdk = 33
 android.ndk = 25b
 
 android.accept_sdk_license = True
-
 android.permissions = INTERNET
 
 android.archs = arm64-v8a, armeabi-v7a
