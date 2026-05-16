@@ -13,15 +13,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ✅ تثبيت Java 17 (الحل الحقيقي)
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install system dependencies
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y openjdk-17-jdk unzip zip git
+          sudo apt install -y unzip zip git
 
       - name: Install Buildozer
         run: |
@@ -29,7 +36,7 @@ jobs:
           pip install buildozer cython
 
       # 🔥 تثبيت Android SDK الجديد
-      - name: Install Android SDK cmdline-tools
+      - name: Install Android SDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
@@ -44,7 +51,7 @@ jobs:
       - name: Accept Licenses
         run: yes | sdkmanager --licenses
 
-      # ✅ تثبيت SDK المطلوب
+      # ✅ تثبيت الأدوات
       - name: Install SDK packages
         run: |
           sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
