@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ✅ تثبيت Java 17 (الحل الحقيقي)
+      # ✅ Java 17 (مهم جداً)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -35,7 +35,7 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      # 🔥 تثبيت Android SDK الجديد
+      # 🔥 تثبيت Android SDK (الحل النهائي)
       - name: Install Android SDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
@@ -51,7 +51,7 @@ jobs:
       - name: Accept Licenses
         run: yes | sdkmanager --licenses
 
-      # ✅ تثبيت الأدوات
+      # ✅ تثبيت SDK المطلوب
       - name: Install SDK packages
         run: |
           sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
